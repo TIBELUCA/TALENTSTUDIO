@@ -1,7 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { PageHeader } from "@/components/PageHeader";
 import { Link } from "wouter";
-import { LayoutTemplate, BookOpen, ChevronRight, ImagePlay, Store, UserCog, Layers, Sparkles, HardDrive } from "lucide-react";
+import { ChevronRight, Store, UserCog, Sparkles, HardDrive } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -15,35 +15,6 @@ interface SettingCard {
 }
 
 const SETTING_CARDS: SettingCard[] = [
-  {
-    href: "/format",
-    icon: LayoutTemplate,
-    gradient: "from-pink-500 to-pink-600",
-    titleKey: "settings.documentFormat",
-    descKey: "settings.documentFormatDesc",
-  },
-  {
-    href: "/presets",
-    icon: BookOpen,
-    gradient: "from-purple-500 to-purple-600",
-    titleKey: "settings.presetsTerms",
-    descKey: "settings.presetsTermsDesc",
-  },
-  {
-    href: "/family-defaults",
-    icon: Layers,
-    gradient: "from-blue-500 to-blue-600",
-    titleKey: "settings.familyDefaults",
-    descKey: "settings.familyDefaultsDesc",
-  },
-  {
-    href: "/media",
-    icon: ImagePlay,
-    gradient: "from-slate-500 to-slate-600",
-    titleKey: "settings.mediaTitle",
-    descKey: "settings.mediaDesc",
-    masterOnly: true,
-  },
   {
     href: "/dealers",
     icon: Store,
