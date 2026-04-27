@@ -6,7 +6,7 @@ import { USER_ROLE_LABELS, type UserRole } from "@shared/schema";
 import {
   FileText, Plus, Users, SlidersHorizontal, Inbox, Languages, LogOut, RefreshCw, Trash2,
   Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity,
-  Mail, Phone, MapPin, Video, MessageCircle, Ruler, Pencil, Check, RotateCw, ListTodo, Youtube, HardDrive, UserCircle,
+  Mail, Phone, MapPin, Video, MessageCircle, Ruler, Pencil, Check, RotateCw, ListTodo, Youtube, HardDrive,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
@@ -274,12 +274,6 @@ export default function Dashboard() {
       label: "Drive",
       icon: HardDrive,
       color: "bg-gradient-to-br from-yellow-400 via-green-500 to-blue-500",
-    },
-    {
-      href: "/account",
-      label: "Account",
-      icon: UserCircle,
-      color: "bg-gradient-to-br from-slate-400 to-slate-700",
     },
     {
       href: "/settings",

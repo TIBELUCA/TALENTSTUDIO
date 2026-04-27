@@ -1,7 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { PageHeader } from "@/components/PageHeader";
 import { Link } from "wouter";
-import { ChevronRight, UserCog, Sparkles, HardDrive } from "lucide-react";
+import { ChevronRight, UserCog, Sparkles, HardDrive, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -15,6 +15,13 @@ interface SettingCard {
 }
 
 const SETTING_CARDS: SettingCard[] = [
+  {
+    href: "/account",
+    icon: UserCircle,
+    gradient: "from-slate-500 to-slate-700",
+    titleKey: "settings.accountTitle",
+    descKey: "settings.accountDesc",
+  },
   {
     href: "/users",
     icon: UserCog,
