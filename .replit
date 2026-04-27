@@ -49,14 +49,10 @@ integrations = ["javascript_log_in_with_replit:2.0.0"]
 [userenv]
 
 [userenv.shared]
-AI_PROVIDER = "openai"
-AI_MODEL = "gpt-4o-mini"
-EMAIL_TOKEN_ENCRYPTION_KEY = "quotepilot-default-key-change-me!!"
 
 [userenv.development]
 
 [userenv.production]
-COOKIE_SECURE = "true"
 
 [postMerge]
 path = "scripts/post-merge.sh"
