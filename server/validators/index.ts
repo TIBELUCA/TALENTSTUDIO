@@ -37,10 +37,7 @@ export const userCreateSchema = z.object({
   role: z.enum(USER_ROLES).optional().default("talent"),
   parentSalesmanIds: z.array(z.number().int().positive()).nullable().optional().default([]),
   assignedCountries: z.array(z.string()).nullable().optional().default(null),
-}).refine(
-  () => true,
-  { message: "" }
-);
+});
 
 export const userUpdateSchema = z.object({
   email: z.string().email().optional(),
@@ -54,10 +51,7 @@ export const userUpdateSchema = z.object({
   role: z.enum(USER_ROLES).optional(),
   parentSalesmanIds: z.array(z.number().int().positive()).nullable().optional(),
   assignedCountries: z.array(z.string()).nullable().optional(),
-}).refine(
-  () => true,
-  { message: "" }
-);
+});
 
 const optStr = z.string().optional().default("");
 const optStrNull = z.string().nullable().optional().default(null);
