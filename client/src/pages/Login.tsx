@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, AlertCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoScritta from "@assets/logo_scritta_1777299867539.png";
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   domain_not_allowed: "Devi usare un account autorizzato.",
@@ -65,10 +66,13 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 p-10">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold tracking-tight" data-testid="text-app-title">
-              Talent Studio
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
+            <img
+              src={logoScritta}
+              alt="Talent Studio"
+              className="h-12 mx-auto"
+              data-testid="img-app-logo"
+            />
+            <p className="text-sm text-muted-foreground mt-3">
               Gestionale per talent manager.
             </p>
           </div>
