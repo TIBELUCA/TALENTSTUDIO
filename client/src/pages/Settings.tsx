@@ -1,7 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { PageHeader } from "@/components/PageHeader";
 import { Link } from "wouter";
-import { ChevronRight, Store, UserCog, Sparkles, HardDrive } from "lucide-react";
+import { ChevronRight, UserCog, Sparkles, HardDrive } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -15,14 +15,6 @@ interface SettingCard {
 }
 
 const SETTING_CARDS: SettingCard[] = [
-  {
-    href: "/dealers",
-    icon: Store,
-    gradient: "from-teal-500 to-teal-600",
-    titleKey: "settings.dealersTitle",
-    descKey: "settings.dealersDesc",
-    masterOnly: true,
-  },
   {
     href: "/users",
     icon: UserCog,
