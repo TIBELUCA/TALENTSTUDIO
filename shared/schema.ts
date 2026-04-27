@@ -2023,7 +2023,7 @@ export const insertTalentSchema = createInsertSchema(talents).omit({ id: true, c
 export type InsertTalent = z.infer<typeof insertTalentSchema>;
 
 // Social-platform metrics (manually entered for now)
-export const TALENT_PLATFORMS = ["instagram", "tiktok", "youtube", "x"] as const;
+export const TALENT_PLATFORMS = ["instagram", "tiktok", "youtube", "facebook", "x"] as const;
 export type TalentPlatform = typeof TALENT_PLATFORMS[number];
 
 export const talentSocials = pgTable("talent_socials", {

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Search, Users, Instagram, Music2, Youtube, Loader2 } from "lucide-react";
+import { Plus, Search, Users, Instagram, Music2, Youtube, Facebook, Loader2 } from "lucide-react";
 import type { TalentListItem, TalentSocial, TalentPlatform } from "@shared/schema";
 import { TALENT_PLATFORMS } from "@shared/schema";
 
@@ -16,6 +16,7 @@ const PLATFORM_LABELS: Record<TalentPlatform, string> = {
   instagram: "Instagram",
   tiktok: "TikTok",
   youtube: "YouTube",
+  facebook: "Facebook",
   x: "X / Twitter",
 };
 
@@ -32,6 +33,7 @@ function PlatformIcon({ platform }: { platform: string }) {
   if (platform === "instagram") return <Instagram className="w-3.5 h-3.5" />;
   if (platform === "tiktok") return <Music2 className="w-3.5 h-3.5" />;
   if (platform === "youtube") return <Youtube className="w-3.5 h-3.5" />;
+  if (platform === "facebook") return <Facebook className="w-3.5 h-3.5" />;
   return <span className="text-xs font-bold">𝕏</span>;
 }
 

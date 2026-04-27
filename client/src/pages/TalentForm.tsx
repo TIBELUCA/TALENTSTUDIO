@@ -30,8 +30,26 @@ const PLATFORM_LABELS: Record<string, string> = {
   instagram: "Instagram",
   tiktok: "TikTok",
   youtube: "YouTube",
+  facebook: "Facebook",
   x: "X (Twitter)",
 };
+
+const PLATFORM_URL_PREFIX: Record<string, string> = {
+  instagram: "https://instagram.com/",
+  tiktok: "https://tiktok.com/@",
+  youtube: "https://youtube.com/@",
+  facebook: "https://facebook.com/",
+  x: "https://x.com/",
+};
+
+function buildProfileUrl(platform: string, handle: string): string {
+  if (!handle) return "";
+  const trimmed = handle.trim().replace(/^@/, "");
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const prefix = PLATFORM_URL_PREFIX[platform];
+  return prefix ? `${prefix}${trimmed}` : "";
+}
 
 const DELIVERABLE_LABELS: Record<string, string> = {
   post: "Post feed",
@@ -59,7 +77,7 @@ const formSchema = z.object({
   socials: z.array(z.object({
     platform: z.enum(TALENT_PLATFORMS),
     handle: z.string().min(1, "Handle obbligatorio"),
-    profileUrl: z.string().optional().nullable(),
+    profileUrl: z.string().url("URL non valido").or(z.literal("")).optional().nullable(),
     followers: z.coerce.number().int().min(0).optional().nullable(),
     engagementPct: z.string().optional().nullable(),
   })),
@@ -166,7 +184,12 @@ export default function TalentForm({ mode }: Props) {
           email: values.talent.email || null,
           defaultCommissionPct: values.talent.defaultCommissionPct || "0",
         },
-        socials: values.socials,
+        socials: values.socials.map(s => ({
+          ...s,
+          profileUrl: (s.profileUrl && s.profileUrl.trim())
+            ? s.profileUrl.trim()
+            : buildProfileUrl(s.platform, s.handle) || null,
+        })),
         rates: values.rates,
       };
       if (isEdit) {
@@ -431,66 +454,93 @@ export default function TalentForm({ mode }: Props) {
                 {socialFields.length === 0 && (
                   <p className="text-sm text-muted-foreground">Nessun social registrato.</p>
                 )}
-                {socialFields.map((field, idx) => (
-                  <div key={field.id} className="grid grid-cols-12 gap-2 items-end pb-3 border-b last:border-0">
-                    <div className="col-span-12 md:col-span-3">
-                      <Label>Piattaforma</Label>
-                      <Select
-                        value={form.watch(`socials.${idx}.platform`)}
-                        onValueChange={(v) => {
-                          if (isTalentPlatform(v)) form.setValue(`socials.${idx}.platform`, v);
-                        }}
-                      >
-                        <SelectTrigger data-testid={`select-social-platform-${idx}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TALENT_PLATFORMS.map(p => (
-                            <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                {socialFields.map((field, idx) => {
+                  const watchedPlatform = form.watch(`socials.${idx}.platform`);
+                  const watchedHandle = form.watch(`socials.${idx}.handle`);
+                  const watchedUrl = form.watch(`socials.${idx}.profileUrl`);
+                  const previewUrl = (watchedUrl && watchedUrl.trim())
+                    ? watchedUrl.trim()
+                    : buildProfileUrl(watchedPlatform, watchedHandle ?? "");
+                  return (
+                    <div key={field.id} className="grid grid-cols-12 gap-2 items-end pb-4 border-b last:border-0">
+                      <div className="col-span-12 md:col-span-3">
+                        <Label>Piattaforma</Label>
+                        <Select
+                          value={watchedPlatform}
+                          onValueChange={(v) => {
+                            if (isTalentPlatform(v)) form.setValue(`socials.${idx}.platform`, v);
+                          }}
+                        >
+                          <SelectTrigger data-testid={`select-social-platform-${idx}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TALENT_PLATFORMS.map(p => (
+                              <SelectItem key={p} value={p}>{PLATFORM_LABELS[p]}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-12 md:col-span-3">
+                        <Label>Handle</Label>
+                        <Input
+                          data-testid={`input-social-handle-${idx}`}
+                          placeholder="@username"
+                          {...form.register(`socials.${idx}.handle`)}
+                        />
+                      </div>
+                      <div className="col-span-6 md:col-span-2">
+                        <Label>Followers</Label>
+                        <Input
+                          data-testid={`input-social-followers-${idx}`}
+                          type="number"
+                          min="0"
+                          {...form.register(`socials.${idx}.followers`)}
+                        />
+                      </div>
+                      <div className="col-span-6 md:col-span-2">
+                        <Label>Engagement %</Label>
+                        <Input
+                          data-testid={`input-social-engagement-${idx}`}
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          {...form.register(`socials.${idx}.engagementPct`)}
+                        />
+                      </div>
+                      <div className="col-span-12 md:col-span-2 flex justify-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSocial(idx)}
+                          data-testid={`button-remove-social-${idx}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="col-span-12">
+                        <Label>URL profilo (opzionale — se vuoto lo costruiamo dall'handle)</Label>
+                        <Input
+                          data-testid={`input-social-url-${idx}`}
+                          placeholder={PLATFORM_URL_PREFIX[watchedPlatform] ?? "https://..."}
+                          {...form.register(`socials.${idx}.profileUrl`)}
+                        />
+                        {previewUrl && (
+                          <a
+                            href={previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 hover:underline truncate"
+                            data-testid={`link-social-preview-${idx}`}
+                          >
+                            Anteprima: {previewUrl}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div className="col-span-12 md:col-span-3">
-                      <Label>Handle</Label>
-                      <Input
-                        data-testid={`input-social-handle-${idx}`}
-                        placeholder="@username"
-                        {...form.register(`socials.${idx}.handle`)}
-                      />
-                    </div>
-                    <div className="col-span-6 md:col-span-2">
-                      <Label>Followers</Label>
-                      <Input
-                        data-testid={`input-social-followers-${idx}`}
-                        type="number"
-                        min="0"
-                        {...form.register(`socials.${idx}.followers`)}
-                      />
-                    </div>
-                    <div className="col-span-6 md:col-span-2">
-                      <Label>Engagement %</Label>
-                      <Input
-                        data-testid={`input-social-engagement-${idx}`}
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        {...form.register(`socials.${idx}.engagementPct`)}
-                      />
-                    </div>
-                    <div className="col-span-12 md:col-span-2 flex justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeSocial(idx)}
-                        data-testid={`button-remove-social-${idx}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
 

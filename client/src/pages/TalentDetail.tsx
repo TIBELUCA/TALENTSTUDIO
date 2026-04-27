@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pencil, Trash2, Loader2, Users, Mail, Phone, MapPin, Instagram,
-  Music2, Youtube, ArrowLeft,
+  Music2, Youtube, Facebook, ArrowLeft, ExternalLink,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -24,8 +24,26 @@ const PLATFORM_LABELS: Record<string, string> = {
   instagram: "Instagram",
   tiktok: "TikTok",
   youtube: "YouTube",
+  facebook: "Facebook",
   x: "X (Twitter)",
 };
+
+const PLATFORM_URL_PREFIX: Record<string, string> = {
+  instagram: "https://instagram.com/",
+  tiktok: "https://tiktok.com/@",
+  youtube: "https://youtube.com/@",
+  facebook: "https://facebook.com/",
+  x: "https://x.com/",
+};
+
+function buildProfileUrl(platform: string, handle: string): string {
+  if (!handle) return "";
+  const trimmed = handle.trim().replace(/^@/, "");
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const prefix = PLATFORM_URL_PREFIX[platform];
+  return prefix ? `${prefix}${trimmed}` : "";
+}
 
 const DELIVERABLE_LABELS: Record<string, string> = {
   post: "Post feed",
@@ -39,6 +57,7 @@ function platformIcon(p: string) {
   if (p === "instagram") return <Instagram className="w-4 h-4" />;
   if (p === "tiktok") return <Music2 className="w-4 h-4" />;
   if (p === "youtube") return <Youtube className="w-4 h-4" />;
+  if (p === "facebook") return <Facebook className="w-4 h-4" />;
   return <span className="font-bold">𝕏</span>;
 }
 
@@ -195,26 +214,54 @@ export default function TalentDetail() {
                   <p className="text-sm text-muted-foreground">Nessun social configurato.</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {talent.socials.map((s) => (
-                      <div key={s.id} className="flex items-center gap-3 p-3 border rounded-md" data-testid={`social-${s.id}`}>
-                        <div className="text-primary">{platformIcon(s.platform)}</div>
-                        <div className="flex-1">
-                          <div className="font-medium">{PLATFORM_LABELS[s.platform] ?? s.platform}</div>
-                          <div className="text-sm text-muted-foreground">{s.handle}</div>
-                          {s.statsUpdatedAt && (
-                            <div className="text-[11px] text-muted-foreground mt-0.5">
-                              Stat. agg. {new Date(s.statsUpdatedAt).toLocaleDateString("it-IT")}
+                    {talent.socials.map((s) => {
+                      const url = s.profileUrl?.trim() || buildProfileUrl(s.platform, s.handle);
+                      return (
+                        <div key={s.id} className="flex items-center gap-3 p-3 border rounded-md hover-elevate" data-testid={`social-${s.id}`}>
+                          <div className="text-primary">{platformIcon(s.platform)}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{PLATFORM_LABELS[s.platform] ?? s.platform}</div>
+                            <div className="text-sm text-muted-foreground truncate">{s.handle}</div>
+                            {url && (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline mt-0.5 truncate max-w-full"
+                                data-testid={`link-social-url-${s.id}`}
+                              >
+                                <ExternalLink className="w-3 h-3 shrink-0" />
+                                <span className="truncate">{url.replace(/^https?:\/\//, "")}</span>
+                              </a>
+                            )}
+                            {s.statsUpdatedAt && (
+                              <div className="text-[11px] text-muted-foreground mt-0.5">
+                                Stat. agg. {new Date(s.statsUpdatedAt).toLocaleDateString("it-IT")}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right text-sm shrink-0">
+                            <div className="font-semibold">{(s.followers ?? 0).toLocaleString("it-IT")}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {s.engagementPct ? `${s.engagementPct}% eng.` : "—"}
                             </div>
-                          )}
-                        </div>
-                        <div className="text-right text-sm">
-                          <div className="font-semibold">{(s.followers ?? 0).toLocaleString("it-IT")}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {s.engagementPct ? `${s.engagementPct}% eng.` : "—"}
+                            {url && (
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 h-7 text-xs"
+                                data-testid={`button-open-social-${s.id}`}
+                              >
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                  Apri <ExternalLink className="w-3 h-3 ml-1" />
+                                </a>
+                              </Button>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
