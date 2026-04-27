@@ -73,7 +73,7 @@ router.get("/api/auth/me", asyncHandler(async (req, res) => {
     const salesman = await userRepository.getById(salesmanId);
     if (salesman && salesman.isActive) {
       const dbRole = (salesman as any).role;
-      const effectiveRole = salesman.isMasterSalesman ? "master" : (dbRole && dbRole !== "salesman" ? dbRole : "salesman");
+      const effectiveRole = dbRole || (salesman.isMasterSalesman ? "head_of_talent" : "talent");
       return res.json({
         type: salesman.isMasterSalesman ? "master" : "salesman",
         id: salesman.id,
@@ -147,11 +147,7 @@ const passwordLoginHandler = asyncHandler(async (req: Request, res: Response) =>
 
   await regenerateSession(req);
   const dbRole = salesman.role;
-  const effectiveRole = salesman.isMasterSalesman
-    ? "master"
-    : dbRole && dbRole !== "salesman"
-      ? dbRole
-      : "salesman";
+  const effectiveRole = dbRole || (salesman.isMasterSalesman ? "head_of_talent" : "talent");
   req.session.salesmanId = salesman.id;
   req.session.salesmanIsMaster = salesman.isMasterSalesman ?? false;
   req.session.salesmanRole = effectiveRole;

@@ -87,8 +87,8 @@ export default function Dashboard() {
 
   const INTERNAL_ONLY_ROLES = ["amministrazione", "tecnico", "produzione", "service"];
   const isInternalOnly = INTERNAL_ONLY_ROLES.includes(role);
-  const canAccessEnquiries = hasRole("salesman") || hasRole("master");
-  const canAccessValidations = hasRole("salesman") || hasRole("master") || hasRole("backoffice");
+  const canAccessEnquiries = isMaster;
+  const canAccessValidations = isMaster;
 
   const { data: enquiries = [] } = useQuery<any[]>({
     queryKey: ["/api/enquiries"],
@@ -104,7 +104,7 @@ export default function Dashboard() {
     enabled: canAccessValidations,
   });
 
-  const canAccessEmail = hasRole("salesman") || hasRole("master");
+  const canAccessEmail = isMaster;
   const { data: emailUnread } = useQuery<{ unreadCount: number; totalCount: number }>({
     queryKey: ["/api/email/unread-count"],
     staleTime: 0,
@@ -703,7 +703,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {(isMaster || role === "salesman") && (
+          {isMaster && (
             <div className="w-full max-w-2xl mx-auto" data-testid="interaction-shortcuts">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-4">Nuova Interazione</p>
               <div className="flex items-center justify-center gap-5 sm:gap-8">

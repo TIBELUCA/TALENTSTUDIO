@@ -34,12 +34,12 @@ export const userCreateSchema = z.object({
   password: z.string().min(4).optional(),
   features: z.record(z.boolean()).optional(),
   isMasterSalesman: z.boolean().optional().default(false),
-  role: z.enum(USER_ROLES).optional().default("salesman"),
+  role: z.enum(USER_ROLES).optional().default("talent"),
   parentSalesmanIds: z.array(z.number().int().positive()).nullable().optional().default([]),
   assignedCountries: z.array(z.string()).nullable().optional().default(null),
 }).refine(
-  (data) => data.role !== "backoffice" || (Array.isArray(data.parentSalesmanIds) && data.parentSalesmanIds.length > 0),
-  { message: "At least one parent salesman is required for backoffice role", path: ["parentSalesmanIds"] }
+  () => true,
+  { message: "" }
 );
 
 export const userUpdateSchema = z.object({
@@ -55,8 +55,8 @@ export const userUpdateSchema = z.object({
   parentSalesmanIds: z.array(z.number().int().positive()).nullable().optional(),
   assignedCountries: z.array(z.string()).nullable().optional(),
 }).refine(
-  (data) => data.role !== "backoffice" || (Array.isArray(data.parentSalesmanIds) && data.parentSalesmanIds.length > 0),
-  { message: "At least one parent salesman is required for backoffice role", path: ["parentSalesmanIds"] }
+  () => true,
+  { message: "" }
 );
 
 const optStr = z.string().optional().default("");

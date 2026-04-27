@@ -4,9 +4,12 @@
 
 This project is **Talent Studio**, a talent-management system for influencer/creator agencies (single tenant: Giovanna's team). It is the result of repurposing a former industrial-machinery quoting tool (QuotePilot) into a talent-first vertical: roster of influencers, brand CRM, campaign quotes, and tracking/payments.
 
-Core users:
-- **Admin (Giovanna)** — full access, manages roster, brands, quotes, campaigns and finances.
-- **Collaborators** — internal teammates who help operate the roster and CRM. They share the master/salesman roles in the user table; legacy granular roles (backoffice / amministrazione / tecnico / produzione / service / tecnico_commerciale) survive in the schema for historic data but are no longer surfaced in the UI.
+Core users (3-role talent agency model):
+- **Head of Talent** (`head_of_talent`) — Giovanna and any senior owner. Full admin: roster, brands, campaigns, finances, settings. Always has `is_master_salesman = true`.
+- **Talent Manager** (`talent_manager`) — internal collaborator who manages assigned talents and their campaigns.
+- **Talent** (`talent`) — the talent themselves (when given app access). Sees only their own data.
+
+The role string is the source of truth for the UI label; `is_master_salesman` (boolean) is the actual gate for admin endpoints (`requireMaster`) and is automatically synchronised from `role === "head_of_talent"` by the user create/update endpoints.
 
 Key capabilities:
 - **Talent roster** with anagraphic data, social handles + manual stats (followers, engagement %), base rates per deliverable type, default commission %, internal notes.
@@ -117,8 +120,10 @@ Preferred communication style: Simple, everyday language.
 - **Gitignore**: `attached_assets/` (chat-paste artefacts, can contain leaked snippets) and `.git.backup-*` (local git history backups) are excluded from commits.
 
 #### Authorization & Roles
-- **Effective Roles**: Admin (master) + Collaborator (salesman). The eight historical USER_ROLES enum values still exist in the schema for backwards compatibility with legacy users/data but are no longer used to scope UI routes.
-- **Auth Middleware**: `requireRole` / `requireSalesRole` for backend protection.
+- **Effective Roles**: Three roles defined in `shared/schema.ts → USER_ROLES`: `head_of_talent`, `talent_manager`, `talent`. The Italian labels live in `USER_ROLE_LABELS` (HEAD OF TALENT / TALENT MANAGER / TALENT).
+- **Master gate**: `is_master_salesman` is the boolean used by `requireMaster`. The user create/update endpoints set it automatically when `role === "head_of_talent"`. The `/users` UI no longer shows a separate "Master" toggle, no parent-salesman picker, no territory picker.
+- **Legacy strings** (`master`, `salesman`, `backoffice`, `amministrazione`, `tecnico`, `produzione`, `service`, `tecnico_commerciale`) still appear in some legacy industrial routes (orders, machines, recap, notifications) that are not yet wired to the talent UI; cleaning those up is a follow-up task.
+- **Auth Middleware**: `requireMaster` / `requireSalesRole` for backend protection.
 - **Activity Logging**: Tracks user actions.
 
 #### Internationalization (i18n)

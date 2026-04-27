@@ -14,7 +14,7 @@ router.get("/api/users", requireMaster, asyncHandler(async (req, res) => {
 
 router.get("/api/users/salesmen-list", requireMaster, asyncHandler(async (req, res) => {
   const users = await userRepository.getSalesmen(req.companyId);
-  res.json(users.filter(u => (u as any).role === "salesman" || u.isMasterSalesman).map(u => ({ id: u.id, name: u.name, surname: (u as any).surname || "" })));
+  res.json(users.filter(u => u.isActive).map(u => ({ id: u.id, name: u.name, surname: (u as any).surname || "" })));
 }));
 
 router.get("/api/users/:id", requireMaster, asyncHandler(async (req, res) => {
@@ -28,8 +28,8 @@ router.post("/api/users", requireMaster, validate(userCreateSchema), asyncHandle
   try {
     const user = await userRepository.create(req.companyId, {
       email, name, surname: surname ?? "", mobileNumber: mobileNumber ?? "", password, features,
-      isMasterSalesman: role === "master" ? true : !!isMasterSalesman,
-      role: role ?? "salesman",
+      isMasterSalesman: role === "head_of_talent" ? true : !!isMasterSalesman,
+      role: role ?? "talent",
       parentSalesmanIds: Array.isArray(parentSalesmanIds) ? parentSalesmanIds : [],
       assignedCountries: assignedCountries ?? null,
     });
@@ -47,7 +47,7 @@ router.put("/api/users/:id", requireMaster, validate(userUpdateSchema), asyncHan
   const { email, name, surname, mobileNumber, password, features, isActive, isMasterSalesman, role, parentSalesmanIds, assignedCountries } = req.body;
   const user = await userRepository.update(id, {
     email, name, surname, mobileNumber, password, features, isActive,
-    isMasterSalesman: role === "master" ? true : (isMasterSalesman !== undefined ? !!isMasterSalesman : undefined),
+    isMasterSalesman: role === "head_of_talent" ? true : (isMasterSalesman !== undefined ? !!isMasterSalesman : undefined),
     role,
     parentSalesmanIds: parentSalesmanIds !== undefined ? (Array.isArray(parentSalesmanIds) ? parentSalesmanIds : []) : undefined,
     assignedCountries: assignedCountries !== undefined ? assignedCountries : undefined,

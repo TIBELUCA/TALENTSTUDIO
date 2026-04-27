@@ -78,13 +78,9 @@ interface SalesmanUser {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  master: "bg-amber-100 text-amber-700 border-amber-300",
-  salesman: "bg-blue-100 text-blue-700 border-blue-300",
-  backoffice: "bg-purple-100 text-purple-700 border-purple-300",
-  amministrazione: "bg-emerald-100 text-emerald-700 border-emerald-300",
-  tecnico: "bg-cyan-100 text-cyan-700 border-cyan-300",
-  produzione: "bg-orange-100 text-orange-700 border-orange-300",
-  service: "bg-rose-100 text-rose-700 border-rose-300",
+  head_of_talent: "bg-amber-100 text-amber-700 border-amber-300",
+  talent_manager: "bg-blue-100 text-blue-700 border-blue-300",
+  talent: "bg-emerald-100 text-emerald-700 border-emerald-300",
 };
 
 function RoleBadge({ role }: { role: string }) {

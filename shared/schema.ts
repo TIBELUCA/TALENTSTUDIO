@@ -429,18 +429,13 @@ export const enquirySequence = pgTable("enquiry_sequence", {
 });
 
 // Salesman Users (created by master; use email+password auth)
-export const USER_ROLES = ["salesman", "master", "backoffice", "amministrazione", "tecnico", "produzione", "service", "tecnico_commerciale"] as const;
+export const USER_ROLES = ["head_of_talent", "talent_manager", "talent"] as const;
 export type UserRole = typeof USER_ROLES[number];
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  salesman: "Salesman",
-  master: "Master",
-  backoffice: "Backoffice",
-  amministrazione: "Amministrazione",
-  tecnico: "Tecnico",
-  produzione: "Produzione",
-  service: "Service",
-  tecnico_commerciale: "Tecnico Commerciale",
+  head_of_talent: "Head of Talent",
+  talent_manager: "Talent Manager",
+  talent: "Talent",
 };
 
 export const salesmanUsers = pgTable("salesman_users", {
@@ -453,7 +448,7 @@ export const salesmanUsers = pgTable("salesman_users", {
   mobileNumber: text("mobile_number").default(""),
   isActive: boolean("is_active").notNull().default(true),
   isMasterSalesman: boolean("is_master_salesman").notNull().default(false),
-  role: text("role").notNull().default("salesman"),
+  role: text("role").notNull().default("talent"),
   parentSalesmanId: integer("parent_salesman_id"),
   parentSalesmanIds: integer("parent_salesman_ids").array(),
   features: jsonb("features").notNull().default({
@@ -1435,7 +1430,7 @@ export interface AuditLogEntry {
   performedBy: string;
 }
 
-export const ORDER_SECTION_EDIT_ROLES: Record<string, UserRole[]> = {
+export const ORDER_SECTION_EDIT_ROLES: Record<string, string[]> = {
   overview: ["master", "salesman", "backoffice"],
   billing: ["master", "amministrazione"],
   shipping: ["master", "salesman", "backoffice"],

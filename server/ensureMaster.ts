@@ -26,7 +26,7 @@ export async function ensureDefaultMaster() {
         passwordHash,
         isActive: true,
         isMasterSalesman: true,
-        role: "master",
+        role: "head_of_talent",
       })
       .where(eq(salesmanUsers.id, existing.id));
     console.log(`[auth] Temporary master account synced: ${TEMP_ADMIN_EMAIL}`);
@@ -42,7 +42,7 @@ export async function ensureDefaultMaster() {
     mobileNumber: "",
     isActive: true,
     isMasterSalesman: true,
-    role: "master",
+    role: "head_of_talent",
     features: DEFAULT_SALESMAN_FEATURES,
   });
 
