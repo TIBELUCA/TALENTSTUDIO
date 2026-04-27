@@ -11,6 +11,7 @@ import {
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import headerLogo from "@assets/logo_scritta_1777300524406.png";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
@@ -497,9 +498,8 @@ export default function Dashboard() {
       {/* Top bar */}
       <header className="h-14 border-b border-white/40 bg-white/30 backdrop-blur-md sticky top-0 z-50 relative flex items-center justify-end px-4 md:px-6 gap-4">
         <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="flex items-center gap-2 cursor-pointer select-none">
-            <img src="/api/dashboard-logo" className="h-8 w-auto object-contain" alt="QuotePilot" />
-            <span className="font-display font-bold text-base tracking-tight text-gray-800">QuotePilot</span>
+          <div className="flex items-center cursor-pointer select-none">
+            <img src={headerLogo} className="h-7 w-auto object-contain" alt="Talent Studio" data-testid="img-dashboard-logo" />
           </div>
         </Link>
 
