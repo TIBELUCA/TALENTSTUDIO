@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import headerLogo from "@assets/logo_scritta_1777300524406.png";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -65,9 +66,8 @@ export function Layout({ children }: LayoutProps) {
         )}
         <div className="flex-1" />
         <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="flex items-center gap-2 cursor-pointer select-none">
-            <img src="/api/dashboard-logo" className="h-8 w-auto object-contain" alt="QuotePilot" />
-            <span className="font-display font-bold text-base tracking-tight text-gray-800 hidden sm:inline">QuotePilot</span>
+          <div className="flex items-center cursor-pointer select-none">
+            <img src={headerLogo} className="h-7 w-auto object-contain" alt="Talent Studio" data-testid="img-header-logo" />
           </div>
         </Link>
 
