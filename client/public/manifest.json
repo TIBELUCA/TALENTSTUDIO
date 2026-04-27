@@ -1,0 +1,16 @@
+{
+  "name": "Talent Studio",
+  "short_name": "Talent Studio",
+  "description": "Gestionale per talent manager — roster, brand CRM, campagne.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}

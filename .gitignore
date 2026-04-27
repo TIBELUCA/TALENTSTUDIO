@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+server/assets/drawings/
+server/assets/drawing-attachments/
+server/assets/email-linked-attachments/*.eml
+infrastructure/.credentials-*
+infrastructure/.env.deploy
+attached_assets/
+.git.backup-*

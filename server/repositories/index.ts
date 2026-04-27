@@ -1,0 +1,15 @@
+export { customerRepository } from "./customers";
+export { contactRepository } from "./contacts";
+export { machineRepository } from "./machines";
+export { presetRepository } from "./presets";
+export { offerRepository } from "./offers";
+export { dealerRepository } from "./dealers";
+export { userRepository } from "./users";
+export { enquiryRepository } from "./enquiries";
+export { activityRepository } from "./activity";
+export { settingsRepository } from "./settings";
+export { aiRunRepository, aiFeedbackRepository } from "./aiRuns";
+export { shareHubRepository } from "./shareHub";
+export { interactionRepository } from "./interactions";
+export { customMachineRepository } from "./customMachines";
+export { talentRepository } from "./talents";

@@ -1,0 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Industrial Blue & Steel Palette */
+  --background: 210 20% 98%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  /* Deep Technical Blue */
+  --primary: 217 91% 60%;
+  --primary-foreground: 210 40% 98%;
+
+  /* Cool Steel Gray */
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222 47% 11.2%;
+
+  /* Muted Technical Text */
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215 16% 47%;
+
+  /* Safety Orange Accent */
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222 47% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 220 9% 63%;
+  --input: 220 9% 63%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-bold tracking-tight text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .glass-card {
+    @apply bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg;
+  }
+}
+
+/* Email HTML body — preserve marketing email layout but keep within container on small screens */
+.email-body-html { overflow-x: auto; overflow-wrap: break-word; }
+.email-body-html img { max-width: 100%; height: auto; }
+.email-body-html table { max-width: 100%; }
+.email-body-html pre, .email-body-html code { white-space: pre-wrap; word-break: break-word; }
+.email-body-html a { word-break: break-word; }
+
+/* Dashboard tile layout — scalable for any number of icons */
+.dashboard-tile-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem 2.5rem;
+  justify-content: center;
+  padding: 0.5rem 0.25rem;
+  max-width: 840px;
+  margin: 0 auto;
+}
+.dashboard-tile-cell {
+  flex: 0 0 100px;
+}
+@media (max-width: 767px) {
+  .dashboard-tile-row {
+    gap: 1rem;
+    max-width: 380px;
+  }
+  .dashboard-tile-cell {
+    flex: 0 0 calc((100% - 2rem) / 3);
+    max-width: 110px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-tile-row {
+    gap: 1.5rem 2rem;
+    max-width: 680px;
+  }
+  .dashboard-tile-cell {
+    flex: 0 0 95px;
+  }
+}
+
+/* iOS-style tile wiggle for dashboard edit mode.
+   Applied on an INNER element so the outer Draggable can use transform freely. */
+@keyframes tile-wiggle-a {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50% { transform: rotate(1.2deg); }
+}
+@keyframes tile-wiggle-b {
+  0%, 100% { transform: rotate(1.2deg); }
+  50% { transform: rotate(-1.2deg); }
+}
+.tile-wiggle-inner {
+  animation: tile-wiggle-a 0.18s ease-in-out infinite;
+  transform-origin: center center;
+}
+.dashboard-tile-cell:nth-child(2n) .tile-wiggle-inner {
+  animation: tile-wiggle-b 0.2s ease-in-out infinite;
+  animation-delay: -0.08s;
+}
+.tile-dragging {
+  z-index: 50;
+  opacity: 0.92;
+}
+.tile-dragging .tile-wiggle-inner {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-wiggle-inner { animation: none !important; }
+}
+
+/* Custom Animations */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+
+@keyframes change-pulse {
+  0%, 100% { background-color: var(--pulse-color); }
+  50% { background-color: transparent; }
+}
+
+.animate-change-added {
+  --pulse-color: rgba(34, 197, 94, 0.2);
+  animation: change-pulse 1.5s ease-in-out infinite;
+  border-left: 4px solid rgb(34, 197, 94);
+}
+
+.animate-change-modified {
+  --pulse-color: rgba(59, 130, 246, 0.2);
+  animation: change-pulse 1.5s ease-in-out infinite;
+  border-left: 4px solid rgb(59, 130, 246);
+}
+
+.animate-change-removed {
+  --pulse-color: rgba(239, 68, 68, 0.2);
+  animation: change-pulse 1.5s ease-in-out infinite;
+  border-left: 4px solid rgb(239, 68, 68);
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-tile-pane {
+  opacity: 1;
+}
+
+.leaflet-control-container .leaflet-control {
+  margin: 10px;
+}
+
+/* Hide scrollbar utility (used by horizontal carousels) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+

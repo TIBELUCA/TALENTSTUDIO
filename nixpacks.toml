@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "chromium", "poppler_utils", "nss", "freetype", "harfbuzz"]
+
+[phases.install]
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "export PUPPETEER_EXECUTABLE_PATH=$(which chromium) && NODE_ENV=production node dist/index.cjs"
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+NPM_CONFIG_PRODUCTION = "false"
