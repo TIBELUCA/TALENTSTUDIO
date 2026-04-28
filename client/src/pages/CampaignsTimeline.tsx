@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CalendarRange, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, CalendarRange, Loader2 } from "lucide-react";
 import { CAMPAIGN_STATUS_LABELS, type CampaignStatus, type Campaign } from "@shared/schema";
 
 type TimelineCampaign = Campaign & {
@@ -266,10 +266,9 @@ export default function CampaignsTimelinePage() {
                 <span className="text-muted-foreground text-sm">su {talentRows.length} {talentRows.length === 1 ? "talent" : "talent"}</span>
               </div>
 
-              <div className="flex items-center gap-1 ml-auto">
-                <Button size="sm" variant="ghost" onClick={() => panBy(-panUnit)} data-testid="button-pan-prev"><ChevronLeft className="h-4 w-4" /></Button>
+              <div className="flex items-center gap-3 ml-auto">
                 <Button size="sm" variant="outline" onClick={() => setAnchor(startOfDay(new Date()))} data-testid="button-pan-today">Oggi</Button>
-                <Button size="sm" variant="ghost" onClick={() => panBy(panUnit)} data-testid="button-pan-next"><ChevronRight className="h-4 w-4" /></Button>
+                <PanWheel onPan={panBy} unit={panUnit} />
               </div>
 
               <div className="inline-flex rounded-md border bg-muted/30 p-0.5" role="group">
@@ -459,5 +458,131 @@ export default function CampaignsTimelinePage() {
         </Card>
       </div>
     </Layout>
+  );
+}
+
+// Metallic rotary wheel for horizontally panning the timeline.
+// Drag horizontally (or vertically) to spin; the wheel converts rotation into pan units.
+function PanWheel({ onPan, unit }: { onPan: (deltaDays: number) => void; unit: number }) {
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const [rotation, setRotation] = useState(0);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    startRot: number;
+    appliedDeg: number;
+    pointerId: number;
+  } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  // Degrees of rotation per panUnit applied to the timeline.
+  const DEG_PER_UNIT = 24;
+  // Pixels of drag per degree of rotation (sensitivity).
+  const DEG_PER_PX = 0.6;
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!wheelRef.current) return;
+    wheelRef.current.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startRot: rotation,
+      appliedDeg: 0,
+      pointerId: e.pointerId,
+    };
+    setDragging(true);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    // Vertical drag also rotates (negative dy spins forward).
+    const dy = -(e.clientY - d.startY);
+    const totalDeg = (dx + dy) * DEG_PER_PX;
+    setRotation(d.startRot + totalDeg);
+    const newDelta = totalDeg - d.appliedDeg;
+    if (Math.abs(newDelta) >= DEG_PER_UNIT / 2) {
+      const steps = Math.trunc(newDelta / (DEG_PER_UNIT / 2));
+      const halfSteps = steps; // each half-step pans by unit/2
+      const days = Math.round(halfSteps * (unit / 2));
+      if (days !== 0) {
+        onPan(days);
+        d.appliedDeg += steps * (DEG_PER_UNIT / 2);
+      }
+    }
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (wheelRef.current && dragRef.current) {
+      try { wheelRef.current.releasePointerCapture(dragRef.current.pointerId); } catch {}
+    }
+    dragRef.current = null;
+    setDragging(false);
+  };
+
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const deg = (e.deltaX + e.deltaY) * 0.4;
+    setRotation(r => r + deg);
+    const days = Math.round((deg / DEG_PER_UNIT) * unit);
+    if (days !== 0) onPan(days);
+  };
+
+  return (
+    <div
+      ref={wheelRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onWheel={onWheel}
+      className={`relative w-12 h-12 rounded-full select-none touch-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+      style={{
+        background: "radial-gradient(circle at 30% 25%, #fafafa 0%, #d4d4d4 35%, #8a8a8a 75%, #5a5a5a 100%)",
+        boxShadow:
+          "inset 0 1px 2px rgba(255,255,255,0.85), inset 0 -2px 4px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.15)",
+      }}
+      title="Trascina o usa la rotellina del mouse per scorrere la timeline"
+      role="slider"
+      aria-label="Scorri timeline"
+      data-testid="wheel-pan"
+    >
+      {/* Notches that rotate with the wheel */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: dragging ? "none" : "transform 180ms ease-out",
+        }}
+      >
+        {Array.from({ length: 18 }).map((_, i) => {
+          const major = i % 3 === 0;
+          return (
+            <div
+              key={i}
+              className={`absolute left-1/2 top-1/2 ${major ? "w-[2px] h-[7px] bg-gray-900/70" : "w-px h-[5px] bg-gray-700/50"} rounded`}
+              style={{
+                transform: `translate(-50%, -50%) rotate(${(i * 360) / 18}deg) translateY(-19px)`,
+              }}
+            />
+          );
+        })}
+        {/* A small accent dot to make rotation obvious */}
+        <div
+          className="absolute left-1/2 top-1/2 w-1 h-1 rounded-full bg-red-500/90"
+          style={{ transform: "translate(-50%, -50%) translateY(-13px)" }}
+        />
+      </div>
+      {/* Inner shiny dome */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at 30% 25%, #ffffff 0%, #d8d8d8 55%, #909090 100%)",
+          boxShadow:
+            "inset 0 1px 2px rgba(255,255,255,0.95), inset 0 -1px 2px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.3)",
+        }}
+      />
+    </div>
   );
 }
