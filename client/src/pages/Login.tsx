@@ -72,9 +72,6 @@ export default function Login() {
               className="h-12 mx-auto"
               data-testid="img-app-logo"
             />
-            <p className="text-sm text-muted-foreground mt-3">
-              Gestionale per talent manager.
-            </p>
           </div>
 
           {(oauthError || formError) && (
