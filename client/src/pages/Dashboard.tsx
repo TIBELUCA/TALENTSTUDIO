@@ -10,7 +10,7 @@ import {
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import headerLogo from "@assets/logo_scritta_1777300524406.png";
+import headerLogo from "@assets/ChatGPT_Image_28_apr_2026,_10_20_34_1777364462068.png";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
