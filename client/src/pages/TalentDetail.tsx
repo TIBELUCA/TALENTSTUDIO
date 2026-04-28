@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -9,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pencil, Trash2, Loader2, Users, Mail, Phone, MapPin, Instagram,
-  Music2, Youtube, Facebook, ArrowLeft, ExternalLink,
+  Music2, Youtube, Facebook, ArrowLeft, ExternalLink, Download, Upload,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -17,6 +18,7 @@ import {
   AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TalentWithDetails } from "@shared/schema";
 
@@ -66,6 +68,9 @@ export default function TalentDetail() {
   const talentId = Number(id);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { isMaster, role } = useAuth();
+  const canEditListino = isMaster || role === "head_of_talent";
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: talent, isLoading, isError } = useQuery<TalentWithDetails>({
     queryKey: ["/api/talents", talentId],
@@ -82,6 +87,51 @@ export default function TalentDetail() {
     },
     onError: () => toast({ title: "Errore", description: "Impossibile eliminare", variant: "destructive" }),
   });
+
+  const importRatesMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/talents/${talentId}/rates/import`, {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Importazione fallita");
+      }
+      return (await res.json()) as { importedCount: number; skipped: string[] };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/talents", talentId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/talents"] });
+      const skippedNote =
+        data.skipped.length > 0
+          ? ` ${data.skipped.length} riga/e ignorata/e.`
+          : "";
+      toast({
+        title: "Listino aggiornato",
+        description: `${data.importedCount} tariffa/e importata/e.${skippedNote}`,
+      });
+    },
+    onError: (err: any) => {
+      let description = "Impossibile importare il file.";
+      try {
+        const parsed = JSON.parse(err?.message ?? "");
+        if (parsed?.message) description = parsed.message;
+      } catch {
+        if (err?.message) description = err.message;
+      }
+      toast({ title: "Errore", description, variant: "destructive" });
+    },
+  });
+
+  function handleListinoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) importRatesMutation.mutate(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   if (isLoading) {
     return (
@@ -269,9 +319,55 @@ export default function TalentDetail() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Tariffe base</CardTitle>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <CardTitle>Tariffe base</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      data-testid="button-download-rates-template"
+                    >
+                      <a href="/api/talents/rates/template" download>
+                        <Download className="w-4 h-4 mr-2" />
+                        Template Excel
+                      </a>
+                    </Button>
+                    {canEditListino && (
+                      <>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                          className="hidden"
+                          onChange={handleListinoFile}
+                          data-testid="input-rates-file"
+                        />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={importRatesMutation.isPending}
+                          data-testid="button-upload-rates"
+                        >
+                          {importRatesMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          Carica listino
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
+                {canEditListino && (
+                  <p className="text-xs text-muted-foreground mb-3" data-testid="text-listino-help">
+                    Carica un file Excel (.xlsx) per sostituire le tariffe correnti. Scarica il template per il formato richiesto.
+                  </p>
+                )}
                 {talent.rates.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nessuna tariffa configurata.</p>
                 ) : (
