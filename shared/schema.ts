@@ -2171,6 +2171,9 @@ export const campaigns = pgTable("campaigns", {
   totalValueEur: decimal("total_value_eur", { precision: 12, scale: 2 }).notNull().default("0"),
   notes: text("notes"),
   createdByUserId: integer("created_by_user_id"),
+  currentVersion: integer("current_version").notNull().default(1),
+  lastModifiedByUserId: integer("last_modified_by_user_id"),
+  lastModifiedByName: text("last_modified_by_name"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -2179,6 +2182,19 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
   id: true, createdAt: true, updatedAt: true, code: true,
 });
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+
+export const campaignVersions = pgTable("campaign_versions", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").notNull(),
+  versionNumber: integer("version_number").notNull(),
+  snapshot: jsonb("snapshot").$type<Record<string, any>>().notNull(),
+  modifiedByUserId: integer("modified_by_user_id"),
+  modifiedByName: text("modified_by_name"),
+  changeNotes: text("change_notes"),
+  changeSummary: jsonb("change_summary").$type<string[]>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type CampaignVersion = typeof campaignVersions.$inferSelect;
 
 export const DELIVERABLE_STATUSES = ["briefing", "draft_received", "approved", "published"] as const;
 export type DeliverableStatus = typeof DELIVERABLE_STATUSES[number];

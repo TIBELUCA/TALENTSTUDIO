@@ -1,13 +1,54 @@
 import { db, eq, and, desc, sql, inArray } from "./base";
 import {
   campaigns, campaignDeliverables, deliverableMetrics,
-  campaignPaymentsIn, campaignPaymentsOut, customers, contacts,
+  campaignPaymentsIn, campaignPaymentsOut, campaignVersions, customers, contacts,
   type Campaign, type CampaignDeliverable, type DeliverableMetric,
-  type CampaignPaymentIn, type CampaignPaymentOut,
+  type CampaignPaymentIn, type CampaignPaymentOut, type CampaignVersion,
   type InsertCampaign, type InsertCampaignDeliverable,
   type InsertDeliverableMetric, type InsertCampaignPaymentIn,
   type InsertCampaignPaymentOut, type CampaignWithRelations,
 } from "@shared/schema";
+
+export function buildCampaignSnapshot(c: CampaignWithRelations): Record<string, any> {
+  return {
+    code: c.code,
+    name: c.name,
+    status: c.status,
+    brandCustomerId: c.brandCustomerId,
+    brandContactId: c.brandContactId,
+    brandName: c.brandName,
+    brandContactName: c.brandContactName,
+    quoteId: c.quoteId,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    totalValueEur: c.totalValueEur,
+    notes: c.notes,
+    deliverables: c.deliverables.map(d => ({
+      id: d.id,
+      talentId: d.talentId,
+      talentName: d.talentName,
+      deliverableType: d.deliverableType,
+      quantity: d.quantity,
+      unitPriceEur: d.unitPriceEur,
+      status: d.status,
+      plannedDate: d.plannedDate,
+      publishedDate: d.publishedDate,
+      postUrl: d.postUrl,
+      notes: d.notes,
+      position: d.position,
+    })),
+    paymentsIn: c.paymentsIn.map(p => ({
+      id: p.id, amountEur: p.amountEur, status: p.status,
+      dueDate: p.dueDate, paidDate: p.paidDate,
+      invoiceRef: p.invoiceRef, notes: p.notes,
+    })),
+    paymentsOut: c.paymentsOut.map(p => ({
+      id: p.id, talentId: p.talentId, amountEur: p.amountEur,
+      commissionPct: p.commissionPct, status: p.status,
+      paidDate: p.paidDate, method: p.method, notes: p.notes,
+    })),
+  };
+}
 
 type DeliverablePayload = Omit<InsertCampaignDeliverable, "campaignId" | "companyId">;
 type MetricsPayload = Omit<InsertDeliverableMetric, "deliverableId" | "companyId">;
@@ -113,7 +154,22 @@ export class CampaignRepository {
 
   async create(companyId: number, data: Omit<InsertCampaign, "companyId">): Promise<Campaign> {
     const code = await nextCampaignCode(companyId);
-    const [c] = await db.insert(campaigns).values({ ...data, companyId, code }).returning();
+    const [c] = await db.insert(campaigns).values({
+      ...data, companyId, code, currentVersion: 1,
+    }).returning();
+    // Insert initial v0 snapshot
+    const full = await this.getById(c.id, companyId);
+    if (full) {
+      await db.insert(campaignVersions).values({
+        campaignId: c.id,
+        versionNumber: 0,
+        snapshot: buildCampaignSnapshot(full),
+        modifiedByUserId: data.createdByUserId ?? null,
+        modifiedByName: null,
+        changeNotes: "Versione iniziale",
+        changeSummary: ["Campagna creata"],
+      });
+    }
     return c;
   }
 
@@ -124,7 +180,45 @@ export class CampaignRepository {
   }
 
   async delete(id: number, companyId: number): Promise<void> {
+    await db.delete(campaignVersions).where(eq(campaignVersions.campaignId, id));
     await db.delete(campaigns).where(and(eq(campaigns.id, id), eq(campaigns.companyId, companyId)));
+  }
+
+  /**
+   * Snapshot the current state of the campaign (pre-mutation) and bump currentVersion.
+   * Call this BEFORE applying a mutation so the snapshot represents the state being replaced.
+   */
+  async createVersionSnapshot(
+    campaignId: number,
+    companyId: number,
+    changeSummary: string[],
+    performedBy: { userId: number | null; name: string | null },
+  ): Promise<void> {
+    const existing = await this.getById(campaignId, companyId);
+    if (!existing) return;
+    await db.insert(campaignVersions).values({
+      campaignId,
+      versionNumber: existing.currentVersion,
+      snapshot: buildCampaignSnapshot(existing),
+      modifiedByUserId: performedBy.userId,
+      modifiedByName: performedBy.name,
+      changeNotes: `Versione ${existing.currentVersion}`,
+      changeSummary: changeSummary.length > 0 ? changeSummary : null,
+    });
+    await db.update(campaigns)
+      .set({
+        currentVersion: existing.currentVersion + 1,
+        lastModifiedByUserId: performedBy.userId,
+        lastModifiedByName: performedBy.name,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(campaigns.id, campaignId), eq(campaigns.companyId, companyId)));
+  }
+
+  async listVersions(campaignId: number): Promise<CampaignVersion[]> {
+    return db.select().from(campaignVersions)
+      .where(eq(campaignVersions.campaignId, campaignId))
+      .orderBy(desc(campaignVersions.versionNumber));
   }
 
   // Deliverables

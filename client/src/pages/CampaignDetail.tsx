@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -19,7 +19,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  Loader2, Plus, Trash2, Mail, Pencil, FileText,
+  Loader2, Plus, Trash2, Mail, Pencil, FileText, History,
   TrendingUp, Wallet, Package, Megaphone, ExternalLink, ArrowUp, ArrowDown, Building2, MessageSquare,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +30,15 @@ import {
   PAYMENT_IN_STATUSES, PAYMENT_IN_STATUS_LABELS,
   PAYMENT_OUT_STATUSES, PAYMENT_OUT_STATUS_LABELS,
   TALENT_DELIVERABLES, TALENT_DELIVERABLE_LABELS, type TalentDeliverable,
-  type CampaignWithRelations, type TalentListItem,
+  type CampaignWithRelations, type TalentListItem, type CampaignVersion,
 } from "@shared/schema";
+
+type CampaignVersionRow = CampaignVersion & { isCurrent: boolean };
+
+function fmtDateTime(d: any) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" });
+}
 
 const CAMPAIGN_STATUS_BADGE: Record<CampaignStatus, string> = {
   briefing: "bg-amber-100 text-amber-800 border-amber-300",
@@ -57,6 +64,8 @@ export default function CampaignDetail() {
   const id = Number(params.id);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [editOpen, setEditOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("deliverables");
 
   const { data: campaign, isLoading } = useQuery<CampaignWithRelations>({
     queryKey: ["/api/campaigns", id],
@@ -133,12 +142,21 @@ export default function CampaignDetail() {
           title={
             <span className="flex items-center gap-3">
               <span className="font-mono text-base text-muted-foreground">{campaign.code}</span>
+              <Badge variant="outline" className="font-mono text-xs" data-testid="badge-campaign-version">
+                v{campaign.currentVersion ?? 1}
+              </Badge>
               <Badge variant="outline" className={CAMPAIGN_STATUS_BADGE[status]}>{CAMPAIGN_STATUS_LABELS[status]}</Badge>
             </span>
           }
           subtitle={campaign.name}
           actions={
             <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} data-testid="button-edit-campaign">
+                <Pencil className="mr-1 h-4 w-4" /> Modifica
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setActiveTab("history")} data-testid="button-show-history">
+                <History className="mr-1 h-4 w-4" /> Storico
+              </Button>
               <Link href={emailHref}>
                 <Button variant="outline" size="sm" data-testid="button-compose-email">
                   <Mail className="mr-1 h-4 w-4" /> Componi email
@@ -215,7 +233,7 @@ export default function CampaignDetail() {
           </Card>
         </div>
 
-        <Tabs defaultValue="deliverables">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="deliverables" data-testid="tab-deliverables">
               <Package className="mr-1 h-4 w-4" /> Deliverable
@@ -230,6 +248,9 @@ export default function CampaignDetail() {
             )}
             <TabsTrigger value="documents" data-testid="tab-documents">
               <FileText className="mr-1 h-4 w-4" /> Documenti
+            </TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history">
+              <History className="mr-1 h-4 w-4" /> Storico
             </TabsTrigger>
           </TabsList>
 
@@ -248,9 +269,202 @@ export default function CampaignDetail() {
           <TabsContent value="documents" className="mt-4">
             <DocumentsTab campaign={campaign} />
           </TabsContent>
+          <TabsContent value="history" className="mt-4">
+            <HistoryTab campaign={campaign} />
+          </TabsContent>
         </Tabs>
+
+        <EditCampaignDialog campaign={campaign} open={editOpen} onOpenChange={setEditOpen} />
       </div>
     </Layout>
+  );
+}
+
+// =============== Edit campaign dialog ===============
+function EditCampaignDialog({ campaign, open, onOpenChange }: {
+  campaign: CampaignWithRelations;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [form, setForm] = useState(() => ({
+    name: campaign.name,
+    status: campaign.status as CampaignStatus,
+    startDate: isoDate(campaign.startDate),
+    endDate: isoDate(campaign.endDate),
+    totalValueEur: String(campaign.totalValueEur ?? "0"),
+    notes: campaign.notes ?? "",
+  }));
+
+  // Reset form when the dialog opens with a new campaign snapshot
+  useEffect(() => {
+    if (open) {
+      setForm({
+        name: campaign.name,
+        status: campaign.status as CampaignStatus,
+        startDate: isoDate(campaign.startDate),
+        endDate: isoDate(campaign.endDate),
+        totalValueEur: String(campaign.totalValueEur ?? "0"),
+        notes: campaign.notes ?? "",
+      });
+    }
+  }, [open, campaign]);
+
+  const mut = useMutation({
+    mutationFn: (data: any) => apiRequest("PUT", `/api/campaigns/${campaign.id}`, data).then(r => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaign.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaign.id, "versions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      toast({ title: "Campagna aggiornata", description: "È stata creata una nuova versione." });
+      onOpenChange(false);
+    },
+    onError: (err: any) => {
+      toast({ title: "Errore", description: err?.message || "Impossibile salvare", variant: "destructive" });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader><DialogTitle>Modifica campagna</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Nome campagna</Label>
+            <Input value={form.name} onChange={(e) => setForm(s => ({ ...s, name: e.target.value }))}
+              data-testid="input-edit-campaign-name" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label>Stato</Label>
+              <Select value={form.status} onValueChange={(v) => setForm(s => ({ ...s, status: v as CampaignStatus }))}>
+                <SelectTrigger data-testid="select-edit-campaign-status"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CAMPAIGN_STATUSES.map(s => (
+                    <SelectItem key={s} value={s}>{CAMPAIGN_STATUS_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Valore totale (€)</Label>
+              <Input type="number" step="0.01" value={form.totalValueEur}
+                onChange={(e) => setForm(s => ({ ...s, totalValueEur: e.target.value }))}
+                data-testid="input-edit-campaign-value" />
+            </div>
+            <div>
+              <Label>Data inizio</Label>
+              <Input type="date" value={form.startDate}
+                onChange={(e) => setForm(s => ({ ...s, startDate: e.target.value }))}
+                data-testid="input-edit-campaign-start" />
+            </div>
+            <div>
+              <Label>Data fine</Label>
+              <Input type="date" value={form.endDate}
+                onChange={(e) => setForm(s => ({ ...s, endDate: e.target.value }))}
+                data-testid="input-edit-campaign-end" />
+            </div>
+          </div>
+          <div>
+            <Label>Note</Label>
+            <Textarea rows={3} value={form.notes}
+              onChange={(e) => setForm(s => ({ ...s, notes: e.target.value }))}
+              data-testid="textarea-edit-campaign-notes" />
+          </div>
+          <div className="text-xs text-muted-foreground bg-muted/30 border rounded-md px-3 py-2">
+            Ogni modifica salvata genera una nuova versione nello storico, così puoi sempre rivedere chi ha cambiato cosa.
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
+          <Button
+            disabled={mut.isPending || !form.name.trim()}
+            onClick={() => mut.mutate({
+              name: form.name.trim(),
+              status: form.status,
+              startDate: form.startDate || null,
+              endDate: form.endDate || null,
+              totalValueEur: form.totalValueEur || "0",
+              notes: form.notes.trim() || null,
+            })}
+            data-testid="button-save-edit-campaign"
+          >
+            {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =============== History tab ===============
+function HistoryTab({ campaign }: { campaign: CampaignWithRelations }) {
+  const { data: versions, isLoading } = useQuery<CampaignVersionRow[]>({
+    queryKey: ["/api/campaigns", campaign.id, "versions"],
+    queryFn: () => fetch(`/api/campaigns/${campaign.id}/versions`, { credentials: "include" }).then(r => r.json()),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <History className="h-5 w-5 text-primary" />
+          Storico versioni ({versions?.length ?? 0})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-3" data-testid="version-row-current">
+          <div className="flex items-center gap-3">
+            <Badge className="font-mono text-xs shrink-0 bg-primary text-primary-foreground">
+              v{campaign.currentVersion ?? 1} — Attuale
+            </Badge>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium">{campaign.lastModifiedByName || "—"}</span>
+                <span className="text-muted-foreground text-xs">{fmtDateTime(campaign.updatedAt)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">Stato corrente della campagna — quello che stai visualizzando.</p>
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+        ) : !versions || versions.length === 0 ? (
+          <div className="text-center text-muted-foreground py-6">Nessuna versione precedente.</div>
+        ) : (
+          versions.map((v) => (
+            <div key={v.id} className="rounded-lg border bg-muted/20 p-3" data-testid={`version-row-${v.versionNumber}`}>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="font-mono text-xs shrink-0">v{v.versionNumber}</Badge>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">{v.modifiedByName || "—"}</span>
+                    <span className="text-muted-foreground text-xs">{fmtDateTime(v.createdAt)}</span>
+                  </div>
+                  {v.changeNotes && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{v.changeNotes}</p>
+                  )}
+                </div>
+              </div>
+              {v.changeSummary && v.changeSummary.length > 0 ? (
+                <ul className="mt-2 ml-9 space-y-0.5">
+                  {v.changeSummary.map((change, ci) => (
+                    <li key={ci} className="text-xs text-muted-foreground flex items-start gap-1.5"
+                      data-testid={`version-change-${v.versionNumber}-${ci}`}>
+                      <span className="text-primary mt-0.5 shrink-0">•</span>
+                      <span>{change}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2 ml-9 italic">Nessuna differenza rilevata.</p>
+              )}
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
