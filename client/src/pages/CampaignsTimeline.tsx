@@ -40,7 +40,7 @@ const ZOOM_LABEL: Record<Zoom, string> = {
 };
 
 const TALENT_COL_PX = 200;
-const ROW_H = 44;
+const ROW_H = 56;
 const HEADER_H_MONTHS = 26;
 const HEADER_H_SUB = 22;
 
@@ -403,20 +403,24 @@ export default function CampaignsTimelinePage() {
                             return (
                               <Link key={`${c.id}-${ci}`} href={`/campaigns/${c.id}`}>
                                 <div
-                                  className={`absolute text-white text-xs px-2 flex items-center cursor-pointer shadow-sm transition-colors ${STATUS_BAR[status]} ${overflowL ? "rounded-l-none" : "rounded-l-md"} ${overflowR ? "rounded-r-none" : "rounded-r-md"}`}
+                                  className={`absolute text-white px-2 py-1 flex flex-col justify-center cursor-pointer shadow-sm transition-colors leading-tight ${STATUS_BAR[status]} ${overflowL ? "rounded-l-none" : "rounded-l-md"} ${overflowR ? "rounded-r-none" : "rounded-r-md"}`}
                                   style={{
                                     left: `${left}px`,
                                     width: `${width}px`,
                                     top: `6px`,
                                     height: `${ROW_H - 12}px`,
                                   }}
-                                  title={`${c.name}${c.brandName ? ` — ${c.brandName}` : ""} · ${formatDate(c._start)} → ${formatDate(c._end)}`}
+                                  title={`${c.brandName ? `${c.brandName} — ` : ""}${c.name} · ${formatDate(c._start)} → ${formatDate(c._end)}`}
                                   data-testid={`timeline-bar-${c.id}-talent-${tr.id}`}
                                 >
-                                  <span className="truncate font-medium">{c.name}</span>
                                   {c.brandName && (
-                                    <span className="ml-1.5 truncate opacity-90 hidden md:inline">· {c.brandName}</span>
+                                    <span className="text-[11px] font-bold uppercase tracking-wide break-words leading-tight">
+                                      {c.brandName}
+                                    </span>
                                   )}
+                                  <span className="text-[11px] font-medium opacity-95 break-words leading-tight">
+                                    {c.name}
+                                  </span>
                                 </div>
                               </Link>
                             );
