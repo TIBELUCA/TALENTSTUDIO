@@ -1,9 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { LogOut, ArrowLeft, Bell, RefreshCw } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import headerLogo from "@assets/ChatGPT_Image_28_apr_2026,_10_20_34_1777364462068.png";
 
 interface LayoutProps {
@@ -64,32 +63,6 @@ export function Layout({ children }: LayoutProps) {
         </Link>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setLocation("/notifications")}
-            className="relative h-8 w-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-white/40 transition-colors"
-            data-testid="btn-notifications"
-            title="Notifiche"
-          >
-            <Bell className="h-4 w-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 text-[9px] font-bold rounded-full bg-red-500 text-white flex items-center justify-center">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </button>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-gray-600 hover:bg-white/40"
-            onClick={() => window.location.reload()}
-            title="Aggiorna pagina"
-            aria-label="Aggiorna pagina"
-            data-testid="button-header-refresh"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-
           <Button
             size="icon"
             variant="ghost"
