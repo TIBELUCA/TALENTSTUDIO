@@ -59,7 +59,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex-1" />
         <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="flex items-center cursor-pointer select-none">
-            <img src={headerLogo} className="h-7 w-auto object-contain" alt="Talent Studio" data-testid="img-header-logo" />
+            <img src={headerLogo} className="h-36 w-auto object-contain" alt="Talent Studio" data-testid="img-header-logo" />
           </div>
         </Link>
 
