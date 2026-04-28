@@ -41,6 +41,7 @@ export default function EditUser() {
     name: "",
     surname: "",
     mobileNumber: "",
+    password: "",
     isActive: true,
     role: "talent" as UserRole,
   });
@@ -63,6 +64,7 @@ export default function EditUser() {
         name: userData.name,
         surname: userData.surname ?? "",
         mobileNumber: userData.mobileNumber ?? "",
+        password: "",
         isActive: userData.isActive,
         role: (userData.role as UserRole) ?? "talent",
       });
@@ -105,6 +107,18 @@ export default function EditUser() {
       parentSalesmanIds: [],
       assignedCountries: null,
     };
+
+    // Only send password when the field is non-empty.
+    // - Creating a user: omitting password → user must sign in with Google OAuth.
+    // - Editing a user: omitting password → existing password is preserved.
+    const pwd = form.password.trim();
+    if (pwd) {
+      if (pwd.length < 4) {
+        toast({ title: "Password troppo corta", description: "La password deve avere almeno 4 caratteri.", variant: "destructive" });
+        return;
+      }
+      payload.password = pwd;
+    }
 
     if (isNew) {
       createMutation.mutate(payload);
@@ -160,11 +174,23 @@ export default function EditUser() {
                 <Label>Telefono</Label>
                 <Input data-testid="input-user-mobile" type="tel" value={form.mobileNumber} onChange={e => setForm(f => ({ ...f, mobileNumber: e.target.value }))} />
               </div>
+              <div className="space-y-1 col-span-2">
+                <Label>Password {isNew ? "" : "(lascia vuoto per non modificare)"}</Label>
+                <Input
+                  data-testid="input-user-password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder={isNew ? "Lascia vuoto per consentire solo login Google" : "•••••••• (invariata)"}
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  minLength={4}
+                />
+              </div>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Gli utenti accedono con il proprio account Google aziendale (quando OAuth è abilitato). Assicurati che l'email
-              sopra corrisponda all'account che useranno per il login.
+              Se Google OAuth è abilitato, l'utente può accedere con l'account Google aziendale corrispondente all'email qui sopra.
+              In alternativa, imposta una password (minimo 4 caratteri) per consentire l'accesso con email e password.
             </p>
           </div>
 
