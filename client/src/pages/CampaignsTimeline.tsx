@@ -467,26 +467,42 @@ function PanWheel({ onPan, unit }: { onPan: (deltaDays: number) => void; unit: n
   const wheelRef = useRef<HTMLDivElement | null>(null);
   const [rotation, setRotation] = useState(0);
   const dragRef = useRef<{
-    startX: number;
-    startY: number;
-    startRot: number;
+    cx: number;
+    cy: number;
+    lastAngle: number;
+    accumulatedDeg: number;
     appliedDeg: number;
     pointerId: number;
   } | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Degrees of rotation per panUnit applied to the timeline.
+  // Degrees of wheel rotation that triggers one panUnit applied to the timeline.
   const DEG_PER_UNIT = 24;
-  // Pixels of drag per degree of rotation (sensitivity).
-  const DEG_PER_PX = 0.6;
+
+  const angleFromCenter = (cx: number, cy: number, x: number, y: number) => {
+    return Math.atan2(y - cy, x - cx) * (180 / Math.PI);
+  };
+
+  const normalizeDelta = (delta: number) => {
+    // Wrap into (-180, 180] to handle the angle jump at ±180°.
+    let d = delta;
+    while (d > 180) d -= 360;
+    while (d < -180) d += 360;
+    return d;
+  };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!wheelRef.current) return;
     wheelRef.current.setPointerCapture(e.pointerId);
+    const rect = wheelRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const startAngle = angleFromCenter(cx, cy, e.clientX, e.clientY);
     dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      startRot: rotation,
+      cx,
+      cy,
+      lastAngle: startAngle,
+      accumulatedDeg: 0,
       appliedDeg: 0,
       pointerId: e.pointerId,
     };
@@ -496,24 +512,23 @@ function PanWheel({ onPan, unit }: { onPan: (deltaDays: number) => void; unit: n
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = dragRef.current;
     if (!d) return;
-    const dx = e.clientX - d.startX;
-    // Vertical drag also rotates (negative dy spins forward).
-    const dy = -(e.clientY - d.startY);
-    const totalDeg = (dx + dy) * DEG_PER_PX;
-    setRotation(d.startRot + totalDeg);
-    const newDelta = totalDeg - d.appliedDeg;
-    if (Math.abs(newDelta) >= DEG_PER_UNIT / 2) {
-      const steps = Math.trunc(newDelta / (DEG_PER_UNIT / 2));
-      const halfSteps = steps; // each half-step pans by unit/2
+    const angle = angleFromCenter(d.cx, d.cy, e.clientX, e.clientY);
+    const delta = normalizeDelta(angle - d.lastAngle);
+    d.lastAngle = angle;
+    d.accumulatedDeg += delta;
+    setRotation(r => r + delta);
+    const pendingDeg = d.accumulatedDeg - d.appliedDeg;
+    if (Math.abs(pendingDeg) >= DEG_PER_UNIT / 2) {
+      const halfSteps = Math.trunc(pendingDeg / (DEG_PER_UNIT / 2));
       const days = Math.round(halfSteps * (unit / 2));
       if (days !== 0) {
         onPan(days);
-        d.appliedDeg += steps * (DEG_PER_UNIT / 2);
+        d.appliedDeg += halfSteps * (DEG_PER_UNIT / 2);
       }
     }
   };
 
-  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+  const endDrag = (_e: React.PointerEvent<HTMLDivElement>) => {
     if (wheelRef.current && dragRef.current) {
       try { wheelRef.current.releasePointerCapture(dragRef.current.pointerId); } catch {}
     }
