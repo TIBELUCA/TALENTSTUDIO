@@ -3,14 +3,14 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  FileText, Plus, Users, SlidersHorizontal, Inbox, LogOut, RefreshCw, Trash2,
+  FileText, Plus, Users, SlidersHorizontal, Inbox, Trash2,
   Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity, CalendarRange,
   Mail, Phone, MapPin, Video, MessageCircle, Ruler, Pencil, Check, RotateCw, ListTodo, Youtube, HardDrive,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import headerLogo from "@assets/ChatGPT_Image_28_apr_2026,_10_20_34_1777364462068.png";
+import { AppHeader } from "@/components/AppHeader";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
@@ -76,7 +76,7 @@ function AppIcon({ tile, badgeCount }: { tile: AppTile; badgeCount?: number }) {
 }
 
 export default function Dashboard() {
-  const { user, isMaster, features, logout, role, hasRole } = useAuth();
+  const { user, isMaster, features, role, hasRole } = useAuth();
   const { t } = useLanguage();
 
   const INTERNAL_ONLY_ROLES = ["amministrazione", "tecnico", "produzione", "service"];
@@ -488,38 +488,7 @@ export default function Dashboard() {
         <div className="absolute bottom-36 right-4 w-28 h-28 rounded-full bg-purple-500 opacity-45 blur-xl" />
       </div>
 
-      {/* Top bar */}
-      <header className="h-14 border-b border-white/40 bg-white/30 backdrop-blur-md sticky top-0 z-50 relative flex items-center justify-end px-4 md:px-6 gap-4">
-        <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="flex items-center cursor-pointer select-none">
-            <img src={headerLogo} className="h-36 w-auto object-contain" alt="Talent Studio" data-testid="img-dashboard-logo" />
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-gray-600 hover:bg-white/40"
-            onClick={() => window.location.reload()}
-            title="Aggiorna pagina"
-            aria-label="Aggiorna pagina"
-            data-testid="button-header-refresh"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-gray-600 hover:text-red-500 hover:bg-white/40"
-            onClick={() => logout()}
-            title={t("common.logout")}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Main content */}
       <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-10">
