@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import {
   FileText, Plus, Users, SlidersHorizontal, Inbox, LogOut, RefreshCw, Trash2,
-  Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity,
+  Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity, CalendarRange,
   Mail, Phone, MapPin, Video, MessageCircle, Ruler, Pencil, Check, RotateCw, ListTodo, Youtube, HardDrive,
 } from "lucide-react";
 import { Link } from "wouter";
@@ -249,6 +249,12 @@ export default function Dashboard() {
       label: "Campagne",
       icon: ClipboardList,
       color: "bg-gradient-to-br from-indigo-400 to-indigo-700",
+    },
+    {
+      href: "/campaigns/timeline",
+      label: "Timeline",
+      icon: CalendarRange,
+      color: "bg-gradient-to-br from-teal-400 to-cyan-600",
     },
     {
       href: "/email",
