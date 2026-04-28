@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -143,7 +143,21 @@ export default function CampaignsTimelinePage() {
     return { start, spanDays };
   }, [anchor, zoom]);
 
-  const pxPerDay = ZOOM_PX_PER_DAY[zoom];
+  // Dynamic px-per-day: stretch to fill the available container width.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [containerW, setContainerW] = useState<number>(0);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => setContainerW(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const basePxPerDay = ZOOM_PX_PER_DAY[zoom];
+  const fitPxPerDay = containerW > 0 ? (containerW - TALENT_COL_PX - 2) / viewport.spanDays : basePxPerDay;
+  const pxPerDay = Math.max(basePxPerDay, fitPxPerDay);
   const totalPx = viewport.spanDays * pxPerDay;
 
   // Build month header segments
@@ -222,7 +236,7 @@ export default function CampaignsTimelinePage() {
 
   return (
     <Layout>
-      <div className="max-w-[1600px] mx-auto space-y-4 pb-20">
+      <div className="w-full px-4 md:px-6 py-4 space-y-4 min-h-[calc(100vh-3.5rem)] flex flex-col">
         <PageHeader
           title="Timeline campagne"
           subtitle="Vista per talent — chi sta lavorando su cosa, quando"
@@ -237,8 +251,8 @@ export default function CampaignsTimelinePage() {
           }
         />
 
-        <Card className="bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-3 space-y-3">
+        <Card className="bg-white/80 backdrop-blur-sm flex-1 flex flex-col">
+          <CardContent className="p-3 space-y-3 flex-1 flex flex-col">
             {/* Toolbar */}
             <div className="flex flex-wrap items-center gap-3 px-1">
               <div className="flex items-center gap-2">
@@ -282,8 +296,8 @@ export default function CampaignsTimelinePage() {
                 Apri una campagna, clicca <strong>Modifica</strong> e imposta data di inizio e fine per vederla qui.
               </div>
             ) : (
-              <div className="border rounded-md overflow-hidden">
-                <div className="overflow-x-auto">
+              <div className="border rounded-md overflow-hidden flex-1 flex flex-col">
+                <div ref={scrollRef} className="overflow-x-auto flex-1">
                   <div style={{ width: `${TALENT_COL_PX + totalPx}px`, minWidth: "100%" }}>
                     {/* Header row: months */}
                     <div className="flex border-b bg-muted/30 sticky top-0 z-20">

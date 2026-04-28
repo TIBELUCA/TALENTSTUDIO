@@ -14,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
   const { t } = useLanguage();
   const [location] = useLocation();
   const isHome = location === "/" || location === "";
+  const isFullWidth = location === "/campaigns/timeline";
 
   return (
     <div className="min-h-screen bg-white flex flex-col relative overflow-hidden">
@@ -84,10 +85,16 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 relative z-10">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-slide-up">
-          {children}
-        </div>
+      <main className="flex-1 relative z-10 flex flex-col">
+        {isFullWidth ? (
+          <div className="flex-1 w-full animate-slide-up">
+            {children}
+          </div>
+        ) : (
+          <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-slide-up">
+            {children}
+          </div>
+        )}
       </main>
     </div>
   );
