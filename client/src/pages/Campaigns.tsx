@@ -211,7 +211,29 @@ function CampaignsTimeline({ rows, isLoading }: { rows: Row[]; isLoading: boolea
     );
   }
   if (active.length === 0 || !viewport) {
-    return null;
+    const totalNonClosed = rows.filter(r => r.status !== "closed").length;
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm" data-testid="card-campaigns-timeline-empty">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarRange className="h-5 w-5 text-primary" />
+            Timeline campagne attive
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
+          {totalNonClosed === 0 ? (
+            <>Nessuna campagna attiva al momento.</>
+          ) : (
+            <>
+              Hai {totalNonClosed} {totalNonClosed === 1 ? "campagna attiva" : "campagne attive"}, ma non
+              {totalNonClosed === 1 ? " ha" : " hanno"} ancora <strong>data di inizio</strong> e <strong>data di fine</strong>.
+              <br />
+              Apri una campagna, clicca <strong>Modifica</strong> e imposta le date per vederla qui sulla timeline.
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   // Build month tick list across viewport
