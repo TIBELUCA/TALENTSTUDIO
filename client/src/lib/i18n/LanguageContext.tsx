@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, ReactNode } from "react";
 import { Language, translations } from "./translations";
 
 type TranslationKey = keyof typeof translations.en;
@@ -11,21 +11,23 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const FIXED_LANGUAGE: Language = "it";
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem("app-language");
-    return (saved as Language) || "it";
-  });
+  const language: Language = FIXED_LANGUAGE;
+  const setLanguage = (_lang: Language) => {
+    // App is Italian-only; switching is intentionally a no-op.
+  };
 
   useEffect(() => {
-    localStorage.setItem("app-language", language);
+    try { localStorage.removeItem("app-language"); } catch { /* ignore */ }
     document.documentElement.lang = language;
   }, [language]);
 
   const t = (path: string, params?: Record<string, string>) => {
     const keys = path.split(".");
     let value: any = translations[language];
-    
+
     for (const key of keys) {
       if (value[key] === undefined) return path;
       value = value[key];

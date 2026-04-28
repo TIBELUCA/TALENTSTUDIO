@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { USER_ROLE_LABELS, type UserRole } from "@shared/schema";
 import {
-  FileText, Plus, Users, SlidersHorizontal, Inbox, Languages, LogOut, RefreshCw, Trash2,
+  FileText, Plus, Users, SlidersHorizontal, Inbox, LogOut, RefreshCw, Trash2,
   Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity,
   Mail, Phone, MapPin, Video, MessageCircle, Ruler, Pencil, Check, RotateCw, ListTodo, Youtube, HardDrive,
 } from "lucide-react";
@@ -15,12 +15,6 @@ import headerLogo from "@assets/logo_scritta_1777300524406.png";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface AppTile {
   href: string;
@@ -84,7 +78,7 @@ function AppIcon({ tile, badgeCount }: { tile: AppTile; badgeCount?: number }) {
 
 export default function Dashboard() {
   const { user, isMaster, features, logout, role, hasRole } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   const INTERNAL_ONLY_ROLES = ["amministrazione", "tecnico", "produzione", "service"];
   const isInternalOnly = INTERNAL_ONLY_ROLES.includes(role);
@@ -523,22 +517,6 @@ export default function Dashboard() {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-600 hover:bg-white/40">
-                <Languages className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage("en")} className={cn(language === "en" && "bg-accent")}>
-                🇬🇧 English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("it")} className={cn(language === "it" && "bg-accent")}>
-                🇮🇹 Italiano
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <Button
             size="icon"

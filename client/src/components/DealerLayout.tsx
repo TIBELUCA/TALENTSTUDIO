@@ -1,15 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { LogOut, Languages, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface DealerLayoutProps {
   children: React.ReactNode;
@@ -18,7 +11,7 @@ interface DealerLayoutProps {
 export function DealerLayout({ children }: DealerLayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const isHome = location === "/dealer" || location === "/dealer/";
 
   return (
@@ -74,22 +67,6 @@ export function DealerLayout({ children }: DealerLayoutProps) {
               </div>
             </div>
           </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-600 hover:bg-white/40">
-                <Languages className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage("en")} className={cn(language === "en" && "bg-accent")}>
-                🇬🇧 English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("it")} className={cn(language === "it" && "bg-accent")}>
-                🇮🇹 Italiano
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <Button
             size="icon"

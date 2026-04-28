@@ -1,17 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { Languages, LogOut, UserCircle, ArrowLeft, Bell, RefreshCw } from "lucide-react";
+import { LogOut, ArrowLeft, Bell, RefreshCw } from "lucide-react";
 import { USER_ROLE_LABELS, type UserRole } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import headerLogo from "@assets/logo_scritta_1777300524406.png";
 
 interface LayoutProps {
@@ -19,8 +12,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user, isMaster, logout, role } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { user, logout, role } = useAuth();
+  const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["/api/notifications/unread-count"],
@@ -113,22 +106,6 @@ export function Layout({ children }: LayoutProps) {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-600 hover:bg-white/40">
-                <Languages className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage("en")} className={cn(language === "en" && "bg-accent")}>
-                🇬🇧 English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("it")} className={cn(language === "it" && "bg-accent")}>
-                🇮🇹 Italiano
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <Button
             size="icon"

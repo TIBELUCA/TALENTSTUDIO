@@ -1,19 +1,13 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, PlusCircle, Users, Languages, LogOut, ClipboardList, Bell, CheckCircle2, FileCheck, Clock, Share2, FilePlus2, Palette, ScrollText, Package, Send, X, Settings } from "lucide-react";
+import { FileText, PlusCircle, Users, LogOut, ClipboardList, Bell, CheckCircle2, FileCheck, Clock, Share2, FilePlus2, Palette, ScrollText, Package, Send, X, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { YouTubeChannelWidget } from "@/components/YouTubeChannelWidget";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface AppTile {
   href: string;
@@ -55,7 +49,7 @@ function AppIcon({ tile }: { tile: AppTile }) {
 
 export default function DealerDashboard() {
   const { user, logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   const { data: enquiries = [] } = useQuery<any[]>({
     queryKey: ["/api/dealer/enquiries"],
@@ -223,22 +217,6 @@ export default function DealerDashboard() {
               </div>
             </div>
           </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-600 hover:bg-white/40">
-                <Languages className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage("en")} className={cn(language === "en" && "bg-accent")}>
-                🇬🇧 English
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage("it")} className={cn(language === "it" && "bg-accent")}>
-                🇮🇹 Italiano
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <Button
             size="icon"
