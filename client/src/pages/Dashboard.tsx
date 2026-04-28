@@ -225,18 +225,25 @@ export default function Dashboard() {
 
   const today = format(new Date(), "EEEE, MMMM d");
 
+  // Tiles that should NOT be visible to the "talent" role (only Preventivi,
+  // Campagne and Timeline remain for talents). Master always sees everything
+  // because the filter short-circuits on isMaster before checking allowedRoles.
+  const NON_TALENT_ROLES = ["head_of_talent", "talent_manager"];
+
   const allTiles: AppTile[] = [
     {
       href: "/talents",
       label: "Talent",
       icon: Users,
       color: "bg-gradient-to-br from-pink-500 to-rose-600",
+      allowedRoles: NON_TALENT_ROLES,
     },
     {
       href: "/crm",
       label: "Brand & CRM",
       icon: Building2,
       color: "bg-gradient-to-br from-sky-400 to-blue-600",
+      allowedRoles: NON_TALENT_ROLES,
     },
     {
       href: "/quotes",
@@ -261,18 +268,21 @@ export default function Dashboard() {
       label: "Email",
       icon: Mail,
       color: "bg-gradient-to-br from-red-400 to-rose-600",
+      allowedRoles: NON_TALENT_ROLES,
     },
     {
       href: "/recap",
       label: "Recap",
       icon: Activity,
       color: "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+      allowedRoles: NON_TALENT_ROLES,
     },
     {
       href: "/drive-archive",
       label: "Drive",
       icon: HardDrive,
       color: "bg-gradient-to-br from-yellow-400 via-green-500 to-blue-500",
+      allowedRoles: NON_TALENT_ROLES,
     },
     {
       href: "/settings",
