@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useLayoutEffect, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -144,16 +144,21 @@ export default function CampaignsTimelinePage() {
   }, [anchor, zoom]);
 
   // Dynamic px-per-day: stretch to fill the available container width.
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const [containerW, setContainerW] = useState<number>(0);
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
+  const roRef = useRef<ResizeObserver | null>(null);
+  const scrollRef = useCallback((el: HTMLDivElement | null) => {
+    if (roRef.current) {
+      roRef.current.disconnect();
+      roRef.current = null;
+    }
     if (!el) return;
-    const update = () => setContainerW(el.clientWidth);
-    update();
-    const ro = new ResizeObserver(update);
+    setContainerW(el.clientWidth);
+    const ro = new ResizeObserver(() => setContainerW(el.clientWidth));
     ro.observe(el);
-    return () => ro.disconnect();
+    roRef.current = ro;
+  }, []);
+  useEffect(() => () => {
+    if (roRef.current) roRef.current.disconnect();
   }, []);
   const basePxPerDay = ZOOM_PX_PER_DAY[zoom];
   const fitPxPerDay = containerW > 0 ? (containerW - TALENT_COL_PX - 2) / viewport.spanDays : basePxPerDay;
