@@ -660,42 +660,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {isMaster && (
-            <div className="w-full max-w-2xl mx-auto" data-testid="interaction-shortcuts">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-4">Nuova Interazione</p>
-              <div className="flex items-center justify-center gap-5 sm:gap-8">
-                {([
-                  { type: "todo", icon: ListTodo, label: "To Do", color: "from-sky-400 to-indigo-600" },
-                  { type: "phone_call", icon: Phone, label: "Telefonata", color: "from-green-400 to-emerald-600" },
-                  { type: "visit", icon: MapPin, label: "Visita", color: "from-orange-400 to-amber-600" },
-                  { type: "whatsapp", icon: MessageCircle, label: "WhatsApp", color: "from-emerald-400 to-green-600" },
-                  { type: "video_call", icon: Video, label: "Video Call", color: "from-purple-400 to-violet-600" },
-                ] as const).map(item => {
-                  const Icon = item.icon;
-                  return (
-                    <Link key={item.type} href={`/crm/interactions/new?type=${item.type}`}>
-                      <div className="flex flex-col items-center gap-1.5 cursor-pointer group select-none" data-testid={`shortcut-${item.type}`}>
-                        <div
-                          className={cn(
-                            "w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center relative overflow-hidden",
-                            "bg-gradient-to-br shadow-lg",
-                            "transition-all duration-200 ease-out",
-                            "group-hover:scale-110 group-hover:shadow-xl group-active:scale-95",
-                            item.color,
-                          )}
-                        >
-                          <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] relative z-10" strokeWidth={1.8} />
-                        </div>
-                        <span className="text-[10px] sm:text-xs font-semibold text-gray-600 text-center leading-tight">
-                          {item.label}
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>
