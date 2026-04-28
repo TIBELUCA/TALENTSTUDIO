@@ -486,7 +486,7 @@ export default function Dashboard() {
       <header className="h-14 border-b border-white/40 bg-white/30 backdrop-blur-md sticky top-0 z-50 relative flex items-center justify-end px-4 md:px-6 gap-4">
         <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="flex items-center cursor-pointer select-none">
-            <img src={headerLogo} className="h-48 w-auto object-contain" alt="Talent Studio" data-testid="img-dashboard-logo" />
+            <img src={headerLogo} className="h-36 w-auto object-contain" alt="Talent Studio" data-testid="img-dashboard-logo" />
           </div>
         </Link>
 
