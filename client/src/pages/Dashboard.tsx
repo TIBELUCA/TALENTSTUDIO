@@ -2,7 +2,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { USER_ROLE_LABELS, type UserRole } from "@shared/schema";
 import {
   FileText, Plus, Users, SlidersHorizontal, Inbox, LogOut, RefreshCw, Trash2,
   Bell, RotateCcw, ClipboardList, CheckCircle2, Wrench, Share2, Plane, Clock, X, Building2, Landmark, Activity,
@@ -492,20 +491,6 @@ export default function Dashboard() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Link href="/account">
-            <div className="hidden sm:flex items-center gap-1.5 mr-2 cursor-pointer hover:opacity-80 transition-opacity" data-testid="link-my-account-header">
-              <div className="w-7 h-7 rounded-full bg-white/60 backdrop-blur-sm border border-white/50 flex items-center justify-center text-gray-700 text-xs font-bold shadow-sm">
-                {user?.name?.[0] || user?.email?.[0] || "U"}
-              </div>
-              <div className="leading-none">
-                <p className="text-xs font-semibold text-gray-700">{user?.name || t("common.user")}</p>
-                <span className="text-[9px] bg-white/50 text-gray-600 px-1 rounded font-medium">
-                  {(USER_ROLE_LABELS[role as UserRole] || role || "").toUpperCase()}
-                </span>
-              </div>
-            </div>
-          </Link>
-
           <Button
             size="icon"
             variant="ghost"

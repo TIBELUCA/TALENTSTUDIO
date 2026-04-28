@@ -2,7 +2,6 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { LogOut, ArrowLeft, Bell, RefreshCw } from "lucide-react";
-import { USER_ROLE_LABELS, type UserRole } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import headerLogo from "@assets/logo_scritta_1777300524406.png";
@@ -12,7 +11,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { user, logout, role } = useAuth();
+  const { logout } = useAuth();
   const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -65,22 +64,6 @@ export function Layout({ children }: LayoutProps) {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Link href="/account">
-            <div className="flex items-center gap-1.5 mr-2 cursor-pointer hover:opacity-80 transition-opacity" data-testid="link-my-account">
-              <div className="w-7 h-7 rounded-full bg-white/60 backdrop-blur-sm border border-white/50 flex items-center justify-center text-gray-700 text-xs font-bold shadow-sm overflow-hidden">
-                {(user as any)?.photoUrl
-                  ? <img src={(user as any).photoUrl} alt="avatar" className="w-full h-full object-cover" />
-                  : (user?.name?.[0] || user?.email?.[0] || "U")}
-              </div>
-              <div className="leading-none hidden sm:block">
-                <p className="text-xs font-semibold text-gray-700">{user?.name || "User"}</p>
-                <span className="text-[9px] bg-white/50 text-gray-600 px-1 rounded font-medium">
-                  {(USER_ROLE_LABELS[role as UserRole] || role || "").toUpperCase()}
-                </span>
-              </div>
-            </div>
-          </Link>
-
           <button
             onClick={() => setLocation("/notifications")}
             className="relative h-8 w-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-white/40 transition-colors"

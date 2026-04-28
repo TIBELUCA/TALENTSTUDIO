@@ -206,18 +206,6 @@ export default function DealerDashboard() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Link href="/dealer/account">
-            <div className="hidden sm:flex items-center gap-1.5 mr-2 cursor-pointer hover:opacity-80 transition-opacity" data-testid="link-dealer-my-account-header">
-              <div className="w-7 h-7 rounded-full bg-white/60 backdrop-blur-sm border border-white/50 flex items-center justify-center text-gray-700 text-xs font-bold shadow-sm">
-                {user?.name?.[0] || "D"}
-              </div>
-              <div className="leading-none">
-                <p className="text-xs font-semibold text-gray-700">{user?.name} {(user as any)?.surname}</p>
-                <span className="text-[9px] bg-primary/10 text-primary px-1 rounded font-medium">DEALER</span>
-              </div>
-            </div>
-          </Link>
-
           <Button
             size="icon"
             variant="ghost"
