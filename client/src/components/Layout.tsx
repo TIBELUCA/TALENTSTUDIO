@@ -4,7 +4,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { LogOut, ArrowLeft, Bell, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import headerLogo from "@assets/logo_scritta_1777300524406.png";
+import headerLogo from "@assets/ChatGPT_Image_28_apr_2026,_10_20_34_1777364462068.png";
 
 interface LayoutProps {
   children: React.ReactNode;
