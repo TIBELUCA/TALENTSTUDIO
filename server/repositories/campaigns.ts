@@ -96,6 +96,42 @@ export class CampaignRepository {
     }));
   }
 
+  /**
+   * Returns campaigns enriched with the unique list of talents involved
+   * (via deliverables) — used to build the talent-grouped timeline.
+   */
+  async listForTimeline(companyId: number): Promise<(Campaign & {
+    brandName: string | null;
+    talents: { id: number; name: string }[];
+  })[]> {
+    const rows = await db
+      .select({ c: campaigns, brandName: customers.name })
+      .from(campaigns)
+      .leftJoin(customers, eq(campaigns.brandCustomerId, customers.id))
+      .where(eq(campaigns.companyId, companyId))
+      .orderBy(desc(campaigns.createdAt));
+    if (rows.length === 0) return [];
+    const ids = rows.map(r => r.c.id);
+    const dels = await db.select({
+      campaignId: campaignDeliverables.campaignId,
+      talentId: campaignDeliverables.talentId,
+      talentName: campaignDeliverables.talentName,
+    }).from(campaignDeliverables)
+      .where(and(eq(campaignDeliverables.companyId, companyId), inArray(campaignDeliverables.campaignId, ids)));
+    const talentsByCampaign = new Map<number, Map<number, string>>();
+    for (const d of dels) {
+      const m = talentsByCampaign.get(d.campaignId) ?? new Map<number, string>();
+      if (!m.has(d.talentId)) m.set(d.talentId, d.talentName);
+      talentsByCampaign.set(d.campaignId, m);
+    }
+    return rows.map(r => ({
+      ...r.c,
+      brandName: r.brandName ?? null,
+      talents: Array.from((talentsByCampaign.get(r.c.id) ?? new Map()).entries())
+        .map(([id, name]) => ({ id, name })),
+    }));
+  }
+
   async getById(id: number, companyId?: number): Promise<CampaignWithRelations | undefined> {
     const where = companyId != null
       ? and(eq(campaigns.id, id), eq(campaigns.companyId, companyId))

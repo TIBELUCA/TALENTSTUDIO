@@ -53,6 +53,7 @@ import Quotes from "@/pages/Quotes";
 import QuoteWizard from "@/pages/QuoteWizard";
 import QuoteDetail from "@/pages/QuoteDetail";
 import Campaigns from "@/pages/Campaigns";
+import CampaignsTimeline from "@/pages/CampaignsTimeline";
 import CampaignDetail from "@/pages/CampaignDetail";
 
 import NotFound from "@/pages/not-found";
@@ -115,6 +116,7 @@ function Router() {
       <Route path="/crm" component={Customers} />
 
       {/* Campagne (Talent Studio) */}
+      <Route path="/campaigns/timeline" component={CampaignsTimeline} />
       <Route path="/campaigns/:id" component={CampaignDetail} />
       <Route path="/campaigns" component={Campaigns} />
 

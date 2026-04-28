@@ -182,6 +182,10 @@ router.get("/api/campaigns", requireSalesRole, asyncHandler(async (req, res) => 
   res.json(await campaignRepository.list(req.companyId));
 }));
 
+router.get("/api/campaigns/timeline", requireSalesRole, asyncHandler(async (req, res) => {
+  res.json(await campaignRepository.listForTimeline(req.companyId));
+}));
+
 router.get("/api/campaigns/:id", requireSalesRole, asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) throw AppError.badRequest("ID non valido");
