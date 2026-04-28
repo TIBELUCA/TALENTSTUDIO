@@ -155,21 +155,10 @@ export class CampaignRepository {
   async create(companyId: number, data: Omit<InsertCampaign, "companyId">): Promise<Campaign> {
     const code = await nextCampaignCode(companyId);
     const [c] = await db.insert(campaigns).values({
-      ...data, companyId, code, currentVersion: 1,
+      ...data, companyId, code, currentVersion: 0,
     }).returning();
-    // Insert initial v0 snapshot
-    const full = await this.getById(c.id, companyId);
-    if (full) {
-      await db.insert(campaignVersions).values({
-        campaignId: c.id,
-        versionNumber: 0,
-        snapshot: buildCampaignSnapshot(full),
-        modifiedByUserId: data.createdByUserId ?? null,
-        modifiedByName: null,
-        changeNotes: "Versione iniziale",
-        changeSummary: ["Campagna creata"],
-      });
-    }
+    // Newly created campaigns start at V0 with no history.
+    // The first modification will snapshot the V0 state into history and bump live to V1.
     return c;
   }
 

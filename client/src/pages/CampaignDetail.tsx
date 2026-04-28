@@ -143,7 +143,7 @@ export default function CampaignDetail() {
             <span className="flex items-center gap-3">
               <span className="font-mono text-base text-muted-foreground">{campaign.code}</span>
               <Badge variant="outline" className="font-mono text-xs" data-testid="badge-campaign-version">
-                v{campaign.currentVersion ?? 1}
+                v{campaign.currentVersion ?? 0}
               </Badge>
               <Badge variant="outline" className={CAMPAIGN_STATUS_BADGE[status]}>{CAMPAIGN_STATUS_LABELS[status]}</Badge>
               {editMode && (
