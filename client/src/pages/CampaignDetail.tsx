@@ -64,7 +64,7 @@ export default function CampaignDetail() {
   const id = Number(params.id);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [editOpen, setEditOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("deliverables");
 
   const { data: campaign, isLoading } = useQuery<CampaignWithRelations>({
@@ -146,14 +146,21 @@ export default function CampaignDetail() {
                 v{campaign.currentVersion ?? 1}
               </Badge>
               <Badge variant="outline" className={CAMPAIGN_STATUS_BADGE[status]}>{CAMPAIGN_STATUS_LABELS[status]}</Badge>
+              {editMode && (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                  Modifica in corso
+                </Badge>
+              )}
             </span>
           }
           subtitle={campaign.name}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} data-testid="button-edit-campaign">
-                <Pencil className="mr-1 h-4 w-4" /> Modifica
-              </Button>
+              {!editMode && (
+                <Button variant="outline" size="sm" onClick={() => setEditMode(true)} data-testid="button-edit-campaign">
+                  <Pencil className="mr-1 h-4 w-4" /> Modifica
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => setActiveTab("history")} data-testid="button-show-history">
                 <History className="mr-1 h-4 w-4" /> Storico
               </Button>
@@ -189,6 +196,14 @@ export default function CampaignDetail() {
             </div>
           }
         />
+
+        {editMode && (
+          <EditCampaignPanel
+            campaign={campaign}
+            onCancel={() => setEditMode(false)}
+            onSaved={() => setEditMode(false)}
+          />
+        )}
 
         {/* Header summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -273,18 +288,16 @@ export default function CampaignDetail() {
             <HistoryTab campaign={campaign} />
           </TabsContent>
         </Tabs>
-
-        <EditCampaignDialog campaign={campaign} open={editOpen} onOpenChange={setEditOpen} />
       </div>
     </Layout>
   );
 }
 
-// =============== Edit campaign dialog ===============
-function EditCampaignDialog({ campaign, open, onOpenChange }: {
+// =============== Inline edit panel ===============
+function EditCampaignPanel({ campaign, onCancel, onSaved }: {
   campaign: CampaignWithRelations;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onCancel: () => void;
+  onSaved: () => void;
 }) {
   const { toast } = useToast();
   const [form, setForm] = useState(() => ({
@@ -296,19 +309,17 @@ function EditCampaignDialog({ campaign, open, onOpenChange }: {
     notes: campaign.notes ?? "",
   }));
 
-  // Reset form when the dialog opens with a new campaign snapshot
+  // Re-sync from server data if the campaign object changes underneath us
   useEffect(() => {
-    if (open) {
-      setForm({
-        name: campaign.name,
-        status: campaign.status as CampaignStatus,
-        startDate: isoDate(campaign.startDate),
-        endDate: isoDate(campaign.endDate),
-        totalValueEur: String(campaign.totalValueEur ?? "0"),
-        notes: campaign.notes ?? "",
-      });
-    }
-  }, [open, campaign]);
+    setForm({
+      name: campaign.name,
+      status: campaign.status as CampaignStatus,
+      startDate: isoDate(campaign.startDate),
+      endDate: isoDate(campaign.endDate),
+      totalValueEur: String(campaign.totalValueEur ?? "0"),
+      notes: campaign.notes ?? "",
+    });
+  }, [campaign.id]);
 
   const mut = useMutation({
     mutationFn: (data: any) => apiRequest("PUT", `/api/campaigns/${campaign.id}`, data).then(r => r.json()),
@@ -317,7 +328,7 @@ function EditCampaignDialog({ campaign, open, onOpenChange }: {
       queryClient.invalidateQueries({ queryKey: ["/api/campaigns", campaign.id, "versions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
       toast({ title: "Campagna aggiornata", description: "È stata creata una nuova versione." });
-      onOpenChange(false);
+      onSaved();
     },
     onError: (err: any) => {
       toast({ title: "Errore", description: err?.message || "Impossibile salvare", variant: "destructive" });
@@ -325,58 +336,62 @@ function EditCampaignDialog({ campaign, open, onOpenChange }: {
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>Modifica campagna</DialogTitle></DialogHeader>
-        <div className="space-y-3">
+    <Card className="border-amber-300 bg-amber-50/40" data-testid="panel-edit-campaign">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Pencil className="h-5 w-5 text-amber-700" /> Modifica campagna
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <Label>Nome campagna</Label>
+          <Input value={form.name} onChange={(e) => setForm(s => ({ ...s, name: e.target.value }))}
+            data-testid="input-edit-campaign-name" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <Label>Nome campagna</Label>
-            <Input value={form.name} onChange={(e) => setForm(s => ({ ...s, name: e.target.value }))}
-              data-testid="input-edit-campaign-name" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <Label>Stato</Label>
-              <Select value={form.status} onValueChange={(v) => setForm(s => ({ ...s, status: v as CampaignStatus }))}>
-                <SelectTrigger data-testid="select-edit-campaign-status"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CAMPAIGN_STATUSES.map(s => (
-                    <SelectItem key={s} value={s}>{CAMPAIGN_STATUS_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Valore totale (€)</Label>
-              <Input type="number" step="0.01" value={form.totalValueEur}
-                onChange={(e) => setForm(s => ({ ...s, totalValueEur: e.target.value }))}
-                data-testid="input-edit-campaign-value" />
-            </div>
-            <div>
-              <Label>Data inizio</Label>
-              <Input type="date" value={form.startDate}
-                onChange={(e) => setForm(s => ({ ...s, startDate: e.target.value }))}
-                data-testid="input-edit-campaign-start" />
-            </div>
-            <div>
-              <Label>Data fine</Label>
-              <Input type="date" value={form.endDate}
-                onChange={(e) => setForm(s => ({ ...s, endDate: e.target.value }))}
-                data-testid="input-edit-campaign-end" />
-            </div>
+            <Label>Stato</Label>
+            <Select value={form.status} onValueChange={(v) => setForm(s => ({ ...s, status: v as CampaignStatus }))}>
+              <SelectTrigger data-testid="select-edit-campaign-status"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CAMPAIGN_STATUSES.map(s => (
+                  <SelectItem key={s} value={s}>{CAMPAIGN_STATUS_LABELS[s]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <Label>Note</Label>
-            <Textarea rows={3} value={form.notes}
-              onChange={(e) => setForm(s => ({ ...s, notes: e.target.value }))}
-              data-testid="textarea-edit-campaign-notes" />
+            <Label>Valore totale (€)</Label>
+            <Input type="number" step="0.01" value={form.totalValueEur}
+              onChange={(e) => setForm(s => ({ ...s, totalValueEur: e.target.value }))}
+              data-testid="input-edit-campaign-value" />
           </div>
-          <div className="text-xs text-muted-foreground bg-muted/30 border rounded-md px-3 py-2">
-            Ogni modifica salvata genera una nuova versione nello storico, così puoi sempre rivedere chi ha cambiato cosa.
+          <div>
+            <Label>Data inizio</Label>
+            <Input type="date" value={form.startDate}
+              onChange={(e) => setForm(s => ({ ...s, startDate: e.target.value }))}
+              data-testid="input-edit-campaign-start" />
+          </div>
+          <div>
+            <Label>Data fine</Label>
+            <Input type="date" value={form.endDate}
+              onChange={(e) => setForm(s => ({ ...s, endDate: e.target.value }))}
+              data-testid="input-edit-campaign-end" />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
+        <div>
+          <Label>Note</Label>
+          <Textarea rows={3} value={form.notes}
+            onChange={(e) => setForm(s => ({ ...s, notes: e.target.value }))}
+            data-testid="textarea-edit-campaign-notes" />
+        </div>
+        <div className="text-xs text-muted-foreground bg-muted/30 border rounded-md px-3 py-2">
+          Ogni modifica salvata genera una nuova versione nello storico, così puoi sempre rivedere chi ha cambiato cosa.
+        </div>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button variant="outline" onClick={onCancel} disabled={mut.isPending} data-testid="button-cancel-edit-campaign">
+            Annulla
+          </Button>
           <Button
             disabled={mut.isPending || !form.name.trim()}
             onClick={() => mut.mutate({
@@ -387,13 +402,13 @@ function EditCampaignDialog({ campaign, open, onOpenChange }: {
               totalValueEur: form.totalValueEur || "0",
               notes: form.notes.trim() || null,
             })}
-            data-testid="button-save-edit-campaign"
+            data-testid="button-confirm-edit-campaign"
           >
-            {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salva"}
+            {mut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Conferma modifiche"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
