@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import headerLogo from "@assets/ChatGPT_Image_28_apr_2026,_10_20_34_1777364462068.png";
 
@@ -12,12 +12,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { logout } = useAuth();
   const { t } = useLanguage();
-  const [location, setLocation] = useLocation();
-  const { data: unreadData } = useQuery<{ count: number }>({
-    queryKey: ["/api/notifications/unread-count"],
-    refetchInterval: 30000,
-  });
-  const unreadCount = unreadData?.count ?? 0;
+  const [location] = useLocation();
   const isHome = location === "/" || location === "";
 
   return (
@@ -63,6 +58,19 @@ export function Layout({ children }: LayoutProps) {
         </Link>
 
         <div className="flex items-center gap-2">
+          {isHome && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-gray-600 hover:bg-white/40"
+              onClick={() => window.location.reload()}
+              title="Aggiorna pagina"
+              aria-label="Aggiorna pagina"
+              data-testid="button-header-refresh"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             size="icon"
             variant="ghost"
