@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { talentRepository } from "../repositories/talents";
 import { campaignRepository } from "../repositories/campaigns";
+import { userRepository } from "../repositories/users";
 import { requireSalesRole } from "../middlewares/auth";
 import { asyncHandler } from "../middlewares/asyncHandler";
 import { AppError } from "../errors";
@@ -128,6 +129,7 @@ router.post("/api/talents", requireSalesRole, asyncHandler(async (req, res) => {
   if (parsed.rates.length > 0) {
     await talentRepository.replaceRates(created.id, buildRates(parsed.rates));
   }
+  await ensureTalentLoginUser(parsed, req.companyId);
   const full = await talentRepository.getById(created.id);
   res.status(201).json(full);
 }));
@@ -162,5 +164,45 @@ router.delete("/api/talents/:id", requireSalesRole, asyncHandler(async (req, res
   await talentRepository.delete(id);
   res.status(204).end();
 }));
+
+// When a talent is created with an email, automatically provision a login user
+// with role="talent" so the talent can sign in. If the email is missing or a
+// user with that email already exists, the call is a no-op. Failures are
+// logged but never block the talent creation request.
+async function ensureTalentLoginUser(parsed: ParsedBody, companyId: number): Promise<void> {
+  try {
+    const email = (parsed.talent.email ?? "").trim().toLowerCase();
+    if (!email) return;
+    const existing = await userRepository.getByEmail(email);
+    if (existing) return;
+    const display = (parsed.talent.displayName ?? "").trim();
+    const real = (parsed.talent.realName ?? "").trim();
+    let name = display || real || email.split("@")[0];
+    let surname = "";
+    if (real) {
+      const parts = real.split(/\s+/);
+      if (parts.length >= 2) {
+        name = parts[0];
+        surname = parts.slice(1).join(" ");
+      } else {
+        name = parts[0];
+      }
+    }
+    await userRepository.create(companyId, {
+      email,
+      name: name || "Talent",
+      surname,
+      mobileNumber: parsed.talent.phone ?? "",
+      // No password → user will sign in with Google OAuth (passwordHash=GOOGLE_OAUTH_USER).
+      features: undefined as any,
+      isMasterSalesman: false,
+      role: "talent",
+      parentSalesmanIds: [],
+      assignedCountries: null,
+    });
+  } catch (err) {
+    console.error("[talents] auto-create login user failed", err);
+  }
+}
 
 export default router;
