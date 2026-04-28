@@ -236,7 +236,7 @@ export default function CampaignsTimelinePage() {
 
   return (
     <Layout>
-      <div className="w-full px-4 md:px-6 py-4 space-y-4 min-h-[calc(100vh-3.5rem)] flex flex-col">
+      <div className="w-[90%] mx-auto py-4 space-y-4 min-h-[calc(100vh-3.5rem)] flex flex-col">
         <PageHeader
           title="Timeline campagne"
           subtitle="Vista per talent — chi sta lavorando su cosa, quando"
